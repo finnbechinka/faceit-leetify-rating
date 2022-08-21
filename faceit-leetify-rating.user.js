@@ -16,6 +16,31 @@
 
 (function () {
     "use strict";
+
+    if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
+        fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                version: "0.2.0",
+                app: "faceit-leetify-rating",
+            }),
+        })
+            .then((res) => res)
+            .then((data) => {
+                window.localStorage.setItem(
+                    "faceit-leetify-rating-counted",
+                    "true"
+                );
+            })
+            .catch((e) => {
+                console.error(e);
+            });
+    }
+
     let leetify_rating;
     let hltv_rating;
     async function get_leetify_rating(username) {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.1.0
+// @version      0.2.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -16,8 +16,11 @@
 
 (function () {
     "use strict";
-
+    let leetify_rating;
+    let hltv_rating;
     async function get_leetify_rating(username) {
+        leetify_rating = "NOT FOUND";
+        hltv_rating = "NOT FOUND";
         let steam_64_id;
         let leetify_user_id;
         let options = {
@@ -43,8 +46,6 @@
             options = {
                 method: "POST",
                 headers: {
-                    "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0",
                     Accept: "application/json, text/plain, */*",
                     "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
                     "Accept-Encoding": "gzip, deflate, br",
@@ -52,7 +53,6 @@
                         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
                     lvid: "c0ffa415093ba1931134cffe769c5529",
                     "Content-Type": "application/json",
-                    Origin: "https://beta.leetify.com",
                     DNT: "1",
                     Connection: "keep-alive",
                     Referer: "https://beta.leetify.com/",
@@ -67,7 +67,9 @@
             await fetch("https://api.leetify.com/api/user/search", options)
                 .then((response) => response.json())
                 .then((response) => {
-                    leetify_user_id = response[0].userId;
+                    if (response.length > 0) {
+                        leetify_user_id = response[0].userId;
+                    }
                 })
                 .catch((err) => console.error(err));
         } else {
@@ -78,15 +80,12 @@
             options = {
                 method: "GET",
                 headers: {
-                    "User-Agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0",
                     Accept: "application/json, text/plain, */*",
                     "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
                     "Accept-Encoding": "gzip, deflate, br",
                     Authorization:
                         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
                     lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
-                    Origin: "https://beta.leetify.com",
                     DNT: "1",
                     Connection: "keep-alive",
                     Referer: "https://beta.leetify.com/",
@@ -102,32 +101,97 @@
                 options
             )
                 .then((response) => response.json())
-                .then((response) =>
-                    console.log(
+                .then((response) => {
+                    leetify_rating =
                         response.generalData.current.gamesTotals.leetifyRating *
-                            100
-                    )
-                )
+                        100;
+                    hltv_rating =
+                        response.generalData.current.gamesTotals.hltvRating;
+                    console.log(`lr: ${leetify_rating}\nhltv: ${hltv_rating}`);
+                })
                 .catch((err) => console.error(err));
         } else {
             console.log("no leetify user id");
         }
     }
 
-    function update() {
-        const current_url = window.location.href;
+    async function update(url) {
+        const url_segments = url.split("/");
+        let index;
+        url_segments.forEach((element) => {
+            if (["players", "players-modal"].includes(element)) {
+                index = url_segments.indexOf(element) + 1;
+            }
+        });
+        await get_leetify_rating(url_segments[index]);
+    }
 
-        if (current_url.includes("/players-modal/")) {
-            let user_name =
-                current_url.split("/")[current_url.split("/").length - 1];
-            get_leetify_rating(user_name);
-        }
+    let my_elements = [];
 
-        if (current_url.includes("/players/")) {
-            let user_name =
-                current_url.split("/")[current_url.split("/").length - 1];
-            get_leetify_rating(user_name);
+    function remove_my_elements() {
+        my_elements.forEach((element) => {
+            let parent = element.parentNode;
+            if (parent) {
+                parent.removeChild(element);
+            }
+        });
+        my_elements = [];
+    }
+
+    function add_elements() {
+        if (my_elements.length != 0) {
+            remove_my_elements();
         }
+        // find the shadow root(s) (very cringe)
+        const shadows = Array.from(document.querySelectorAll("*"))
+            .map((el) => el.shadowRoot)
+            .filter(Boolean);
+        shadows.forEach((s) => {
+            let elements = s.querySelectorAll("span");
+            elements.forEach((e) => {
+                if (e.lastChild && e.lastChild.data == "Main Statistics") {
+                    const title = e.parentNode;
+                    const tiles = title.nextSibling;
+                    const divider = tiles.nextSibling;
+
+                    const my_title = title.cloneNode(true);
+                    my_title.firstChild.firstChild.data =
+                        "RATINGS (LAST 30 MATCHES)";
+
+                    const my_tiles = tiles.cloneNode(true);
+                    while (my_tiles.childElementCount > 2) {
+                        my_tiles.removeChild(my_tiles.lastChild);
+                    }
+                    my_tiles.firstChild.firstChild.firstChild.firstChild.data =
+                        leetify_rating;
+                    my_tiles.firstChild.lastChild.firstChild.firstChild.data =
+                        "LEETIFY RATING";
+                    my_tiles.lastChild.firstChild.firstChild.firstChild.data =
+                        hltv_rating;
+                    my_tiles.lastChild.lastChild.firstChild.firstChild.data =
+                        "HLTV RATING";
+
+                    const my_divider = divider.cloneNode(true);
+
+                    my_elements.push(my_title);
+                    my_elements.push(my_tiles);
+                    my_elements.push(my_divider);
+
+                    divider.parentNode.insertBefore(
+                        my_title,
+                        divider.nextSibling
+                    );
+                    my_title.parentNode.insertBefore(
+                        my_tiles,
+                        my_title.nextSibling
+                    );
+                    my_tiles.parentNode.insertBefore(
+                        my_divider,
+                        my_tiles.nextSibling
+                    );
+                }
+            });
+        });
     }
 
     // Select the node that will be observed for mutations
@@ -139,13 +203,15 @@
     let old_url;
 
     // Callback function to execute when mutations are observed
-    const callback = (mutationList, observer) => {
-        const current_url = window.location.href;
+    const callback = async (mutationList, observer) => {
+        let current_url = window.location.href;
 
         if (current_url != old_url) {
             old_url = current_url;
-            update();
+            remove_my_elements();
+            await update(current_url);
         }
+        add_elements();
     };
 
     // Create an observer instance linked to the callback function
@@ -153,6 +219,4 @@
 
     // Start observing the target node for configured mutations
     observer.observe(targetNode, config);
-
-    update();
 })();

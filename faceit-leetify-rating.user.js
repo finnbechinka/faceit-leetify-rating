@@ -114,20 +114,15 @@
         }
     }
 
-    function update() {
-        const current_url = window.location.href;
-
-        if (current_url.includes("/players-modal/")) {
-            let user_name =
-                current_url.split("/")[current_url.split("/").length - 1];
-            get_leetify_rating(user_name);
-        }
-
-        if (current_url.includes("/players/")) {
-            let user_name =
-                current_url.split("/")[current_url.split("/").length - 1];
-            get_leetify_rating(user_name);
-        }
+    function update(url) {
+        const url_segments = url.split("/");
+        url_segments.forEach((element) => {
+            if (["players", "players-modal"].includes(element)) {
+                get_leetify_rating(
+                    url_segments[url_segments.indexOf(element) + 1]
+                );
+            }
+        });
     }
 
     // Select the node that will be observed for mutations
@@ -144,7 +139,7 @@
 
         if (current_url != old_url) {
             old_url = current_url;
-            update();
+            update(current_url);
         }
     };
 

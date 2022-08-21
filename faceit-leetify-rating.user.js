@@ -8,7 +8,10 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=faceit.com
 // @grant        none
 // @run-at       document-end
-// @homepageURL  https://github.com/shakerrrr/
+// @homepageURL  https://github.com/shakerrrr/faceit-leetify-rating
+// @updateURL    https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
+// @downloadURL  https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
+// @supportURL   https://github.com/shakerrrr/faceit-leetify-rating/issues
 // ==/UserScript==
 
 (function () {

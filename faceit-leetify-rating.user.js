@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.1.1
+// @version      0.2.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*

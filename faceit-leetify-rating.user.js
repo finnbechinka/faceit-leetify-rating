@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.2.0
+// @version      0.3.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -16,6 +16,31 @@
 
 (function () {
     "use strict";
+
+    if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
+        fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                version: "0.3.0",
+                app: "faceit-leetify-rating",
+            }),
+        })
+            .then((res) => res)
+            .then((data) => {
+                window.localStorage.setItem(
+                    "faceit-leetify-rating-counted",
+                    "true"
+                );
+            })
+            .catch((e) => {
+                console.error(e);
+            });
+    }
+
     let leetify_rating;
     let hltv_rating;
     async function get_leetify_rating(username) {
@@ -72,46 +97,110 @@
                     }
                 })
                 .catch((err) => console.error(err));
+
+            if (leetify_user_id) {
+                options = {
+                    method: "GET",
+                    headers: {
+                        Accept: "application/json, text/plain, */*",
+                        "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
+                        "Accept-Encoding": "gzip, deflate, br",
+                        Authorization:
+                            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                        lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+                        DNT: "1",
+                        Connection: "keep-alive",
+                        Referer: "https://beta.leetify.com/",
+                        "Sec-Fetch-Dest": "empty",
+                        "Sec-Fetch-Mode": "cors",
+                        "Sec-Fetch-Site": "same-site",
+                        TE: "trailers",
+                    },
+                };
+
+                await fetch(
+                    `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                    options
+                )
+                    .then((response) => response.json())
+                    .then((response) => {
+                        leetify_rating = (
+                            response.generalData.current.gamesTotals
+                                .leetifyRating * 100
+                        ).toFixed(2);
+                        hltv_rating =
+                            response.generalData.current.gamesTotals.hltvRating;
+                        console.log(
+                            `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
+                        );
+                    })
+                    .catch((err) => console.error(err));
+            } else {
+                console.log("no leetify user id");
+                if (leetify_user_id) {
+                    options = {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json, text/plain, */*",
+                            "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
+                            "Accept-Encoding": "gzip, deflate, br",
+                            Authorization:
+                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                            lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+                            DNT: "1",
+                            Connection: "keep-alive",
+                            Referer: "https://beta.leetify.com/",
+                            "Sec-Fetch-Dest": "empty",
+                            "Sec-Fetch-Mode": "cors",
+                            "Sec-Fetch-Site": "same-site",
+                            TE: "trailers",
+                        },
+                    };
+
+                    await fetch(
+                        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                        options
+                    )
+                        .then((response) => response.json())
+                        .then((response) => {
+                            leetify_rating = (
+                                response.generalData.current.gamesTotals
+                                    .leetifyRating * 100
+                            ).toFixed(2);
+                            hltv_rating =
+                                response.generalData.current.gamesTotals
+                                    .hltvRating;
+                            console.log(
+                                `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
+                            );
+                        })
+                        .catch((err) => console.error(err));
+                } else {
+                    console.log("no leetify user id");
+                    options = {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json, text/plain, */*",
+                            Authorization:
+                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                        },
+                    };
+
+                    await fetch(
+                        `https://api.leetify.com/api/mini-profiles/${steam_64_id}`,
+                        options
+                    )
+                        .then((response) => response.json())
+                        .then((response) => {
+                            leetify_rating = (
+                                response.ratings.leetify * 100
+                            ).toFixed(2);
+                        })
+                        .catch((err) => console.error(err));
+                }
+            }
         } else {
             console.log("no steam 64 id");
-        }
-
-        if (leetify_user_id) {
-            options = {
-                method: "GET",
-                headers: {
-                    Accept: "application/json, text/plain, */*",
-                    "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                    "Accept-Encoding": "gzip, deflate, br",
-                    Authorization:
-                        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                    lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
-                    DNT: "1",
-                    Connection: "keep-alive",
-                    Referer: "https://beta.leetify.com/",
-                    "Sec-Fetch-Dest": "empty",
-                    "Sec-Fetch-Mode": "cors",
-                    "Sec-Fetch-Site": "same-site",
-                    TE: "trailers",
-                },
-            };
-
-            await fetch(
-                `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
-                options
-            )
-                .then((response) => response.json())
-                .then((response) => {
-                    leetify_rating =
-                        response.generalData.current.gamesTotals.leetifyRating *
-                        100;
-                    hltv_rating =
-                        response.generalData.current.gamesTotals.hltvRating;
-                    console.log(`lr: ${leetify_rating}\nhltv: ${hltv_rating}`);
-                })
-                .catch((err) => console.error(err));
-        } else {
-            console.log("no leetify user id");
         }
     }
 

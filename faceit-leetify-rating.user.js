@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.2.0
+// @version      0.2.1
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -25,7 +25,7 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.2.0",
+                version: "0.2.1",
                 app: "faceit-leetify-rating",
             }),
         })
@@ -127,9 +127,10 @@
             )
                 .then((response) => response.json())
                 .then((response) => {
-                    leetify_rating =
+                    leetify_rating = (
                         response.generalData.current.gamesTotals.leetifyRating *
-                        100;
+                        100
+                    ).toFixed(2);
                     hltv_rating =
                         response.generalData.current.gamesTotals.hltvRating;
                     console.log(`lr: ${leetify_rating}\nhltv: ${hltv_rating}`);

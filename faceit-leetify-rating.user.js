@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.3.1
+// @version      0.3.2
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -49,66 +49,37 @@
         hltv_rating = "NOT FOUND";
         let steam_64_id;
         let leetify_user_id;
-        let options = {
-            method: "GET",
-            headers: {
-                cookie: "__cf_bm=avF3h9RIT5kjpEh17Z7P1W2Rhs9DcBHJCVtGd5qNR1U-1661058565-0-AcC3JgaL6nN0O5Qc9rMfglt%2FX5DAI813G9zPRstr55AwVOjvOzp%2Bdeov926ilJV5McXtpRCO%2BvuI8o6KRWTRaoY%3D; __cfruid=5f7c8c1f05ecc68841b24e5d3f0dac2c2385dde5-1661058565",
-                accept: "application/json",
-                Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
-            },
-        };
-
-        await fetch(
-            `https://open.faceit.com/data/v4/players?nickname=${username}`,
-            options
-        )
-            .then((response) => response.json())
-            .then((response) => {
-                steam_64_id = response.games.csgo.game_player_id;
-            })
-            .catch((err) => console.error(err));
-
-        if (steam_64_id) {
-            options = {
-                method: "POST",
+        try {
+            let options = {
+                method: "GET",
                 headers: {
-                    Accept: "application/json, text/plain, */*",
-                    "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                    "Accept-Encoding": "gzip, deflate, br",
+                    cookie: "__cf_bm=avF3h9RIT5kjpEh17Z7P1W2Rhs9DcBHJCVtGd5qNR1U-1661058565-0-AcC3JgaL6nN0O5Qc9rMfglt%2FX5DAI813G9zPRstr55AwVOjvOzp%2Bdeov926ilJV5McXtpRCO%2BvuI8o6KRWTRaoY%3D; __cfruid=5f7c8c1f05ecc68841b24e5d3f0dac2c2385dde5-1661058565",
+                    accept: "application/json",
                     Authorization:
-                        "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                    lvid: "c0ffa415093ba1931134cffe769c5529",
-                    "Content-Type": "application/json",
-                    DNT: "1",
-                    Connection: "keep-alive",
-                    Referer: "https://beta.leetify.com/",
-                    "Sec-Fetch-Dest": "empty",
-                    "Sec-Fetch-Mode": "cors",
-                    "Sec-Fetch-Site": "same-site",
-                    TE: "trailers",
+                        "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
                 },
-                body: `{"searchTerm":"${steam_64_id}"}`,
             };
 
-            await fetch("https://api.leetify.com/api/user/search", options)
-                .then((response) => response.json())
-                .then((response) => {
-                    if (response.length > 0) {
-                        leetify_user_id = response[0].userId;
-                    }
-                })
-                .catch((err) => console.error(err));
+            const res_player = await fetch(
+                `https://open.faceit.com/data/v4/players?nickname=${username}`,
+                options
+            );
+            const res_player_body = await res_player.json();
+            if (res_player.ok) {
+                steam_64_id = res_player_body.games.csgo.game_player_id;
+            }
 
-            if (leetify_user_id) {
+            if (steam_64_id) {
                 options = {
-                    method: "GET",
+                    method: "POST",
                     headers: {
                         Accept: "application/json, text/plain, */*",
                         "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
                         "Accept-Encoding": "gzip, deflate, br",
                         Authorization:
                             "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                        lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+                        lvid: "c0ffa415093ba1931134cffe769c5529",
+                        "Content-Type": "application/json",
                         DNT: "1",
                         Connection: "keep-alive",
                         Referer: "https://beta.leetify.com/",
@@ -117,27 +88,21 @@
                         "Sec-Fetch-Site": "same-site",
                         TE: "trailers",
                     },
+                    body: `{"searchTerm":"${steam_64_id}"}`,
                 };
 
-                await fetch(
-                    `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                const res_search = await fetch(
+                    "https://api.leetify.com/api/user/search",
                     options
-                )
-                    .then((response) => response.json())
-                    .then((response) => {
-                        leetify_rating = (
-                            response.generalData.current.gamesTotals
-                                .leetifyRating * 100
-                        ).toFixed(2);
-                        hltv_rating =
-                            response.generalData.current.gamesTotals.hltvRating;
-                        console.log(
-                            `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
-                        );
-                    })
-                    .catch((err) => console.error(err));
-            } else {
-                console.log("no leetify user id");
+                );
+                const res_search_body = await res_search.json();
+
+                if (res_search.ok) {
+                    if (res_search_body.length > 0) {
+                        leetify_user_id = res_search_body[0].userId;
+                    }
+                }
+
                 if (leetify_user_id) {
                     options = {
                         method: "GET",
@@ -158,26 +123,27 @@
                         },
                     };
 
-                    await fetch(
+                    const res_general_data = await fetch(
                         `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
                         options
-                    )
-                        .then((response) => response.json())
-                        .then((response) => {
-                            leetify_rating = (
-                                response.generalData.current.gamesTotals
-                                    .leetifyRating * 100
-                            ).toFixed(2);
-                            hltv_rating =
-                                response.generalData.current.gamesTotals
-                                    .hltvRating;
-                            console.log(
-                                `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
-                            );
-                        })
-                        .catch((err) => console.error(err));
+                    );
+                    const res_general_data_body = await res_general_data.json();
+
+                    if (res_general_data.ok) {
+                        leetify_rating = (
+                            res_general_data_body.generalData.current
+                                .gamesTotals.leetifyRating * 100
+                        ).toFixed(2);
+                        hltv_rating =
+                            res_general_data_body.generalData.current
+                                .gamesTotals.hltvRating;
+                        console.log(
+                            `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
+                        );
+                    }
                 } else {
                     console.log("no leetify user id");
+
                     options = {
                         method: "GET",
                         headers: {
@@ -187,21 +153,24 @@
                         },
                     };
 
-                    await fetch(
+                    const res_alternative = await fetch(
                         `https://api.leetify.com/api/mini-profiles/${steam_64_id}`,
                         options
-                    )
-                        .then((response) => response.json())
-                        .then((response) => {
-                            leetify_rating = (
-                                response.ratings.leetify * 100
-                            ).toFixed(2);
-                        })
-                        .catch((err) => console.error(err));
+                    );
+
+                    const res_alternative_body = await res_alternative.json();
+
+                    if (res_alternative.ok) {
+                        leetify_rating = (
+                            res_alternative_body.ratings.leetify * 100
+                        ).toFixed(2);
+                    }
                 }
+            } else {
+                console.log("no steam 64 id");
             }
-        } else {
-            console.log("no steam 64 id");
+        } catch (error) {
+            console.log(error);
         }
     }
 

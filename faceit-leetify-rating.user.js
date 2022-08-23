@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.3.0
+// @version      0.3.1
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -25,16 +25,17 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.3.0",
+                version: "0.3.1",
                 app: "faceit-leetify-rating",
             }),
         })
-            .then((res) => res)
-            .then((data) => {
-                window.localStorage.setItem(
-                    "faceit-leetify-rating-counted",
-                    "true"
-                );
+            .then((res) => {
+                if (res.ok) {
+                    window.localStorage.setItem(
+                        "faceit-leetify-rating-counted",
+                        "true"
+                    );
+                }
             })
             .catch((e) => {
                 console.error(e);

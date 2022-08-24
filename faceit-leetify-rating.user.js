@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.3.2
+// @version      0.4.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
@@ -25,7 +25,7 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.3.1",
+                version: "0.4.0",
                 app: "faceit-leetify-rating",
             }),
         })
@@ -177,12 +177,19 @@
     async function update(url) {
         const url_segments = url.split("/");
         let index;
-        url_segments.forEach((element) => {
-            if (["players", "players-modal"].includes(element)) {
-                index = url_segments.indexOf(element) + 1;
+
+        for (let e of url_segments) {
+            const is_csgo_stats_page =
+                ["players", "players-modal"].includes(e) &&
+                url_segments.includes("stats") &&
+                url_segments.includes("csgo");
+            if (is_csgo_stats_page) {
+                index = url_segments.indexOf(e) + 1;
+                await get_leetify_rating(url_segments[index]);
+                add_elements();
+                break;
             }
-        });
-        await get_leetify_rating(url_segments[index]);
+        }
     }
 
     let my_elements = [];
@@ -268,9 +275,8 @@
         if (current_url != old_url) {
             old_url = current_url;
             remove_my_elements();
-            await update(current_url);
+            update(current_url);
         }
-        add_elements();
     };
 
     // Create an observer instance linked to the callback function

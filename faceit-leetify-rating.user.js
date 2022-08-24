@@ -53,7 +53,6 @@
             let options = {
                 method: "GET",
                 headers: {
-                    cookie: "__cf_bm=avF3h9RIT5kjpEh17Z7P1W2Rhs9DcBHJCVtGd5qNR1U-1661058565-0-AcC3JgaL6nN0O5Qc9rMfglt%2FX5DAI813G9zPRstr55AwVOjvOzp%2Bdeov926ilJV5McXtpRCO%2BvuI8o6KRWTRaoY%3D; __cfruid=5f7c8c1f05ecc68841b24e5d3f0dac2c2385dde5-1661058565",
                     accept: "application/json",
                     Authorization:
                         "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
@@ -74,19 +73,9 @@
                     method: "POST",
                     headers: {
                         Accept: "application/json, text/plain, */*",
-                        "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                        "Accept-Encoding": "gzip, deflate, br",
                         Authorization:
                             "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                        lvid: "c0ffa415093ba1931134cffe769c5529",
                         "Content-Type": "application/json",
-                        DNT: "1",
-                        Connection: "keep-alive",
-                        Referer: "https://beta.leetify.com/",
-                        "Sec-Fetch-Dest": "empty",
-                        "Sec-Fetch-Mode": "cors",
-                        "Sec-Fetch-Site": "same-site",
-                        TE: "trailers",
                     },
                     body: `{"searchTerm":"${steam_64_id}"}`,
                 };
@@ -108,18 +97,8 @@
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                            "Accept-Encoding": "gzip, deflate, br",
                             Authorization:
                                 "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                            lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
-                            DNT: "1",
-                            Connection: "keep-alive",
-                            Referer: "https://beta.leetify.com/",
-                            "Sec-Fetch-Dest": "empty",
-                            "Sec-Fetch-Mode": "cors",
-                            "Sec-Fetch-Site": "same-site",
-                            TE: "trailers",
                         },
                     };
 

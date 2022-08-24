@@ -116,9 +116,6 @@
                         hltv_rating =
                             res_general_data_body.generalData.current
                                 .gamesTotals.hltvRating;
-                        console.log(
-                            `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
-                        );
                     }
                 } else {
                     console.log("no leetify user id");
@@ -148,6 +145,7 @@
             } else {
                 console.log("no steam 64 id");
             }
+            console.log(`lr: ${leetify_rating}\nhltv: ${hltv_rating}`);
         } catch (error) {
             console.log(error);
         }
@@ -166,7 +164,6 @@
                 index = url_segments.indexOf(e) + 1;
                 await get_leetify_rating(url_segments[index]);
                 add_elements();
-                break;
             }
         }
     }
@@ -254,7 +251,7 @@
         if (current_url != old_url) {
             old_url = current_url;
             remove_my_elements();
-            update(current_url);
+            await update(current_url);
         }
     };
 

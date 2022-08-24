@@ -44,9 +44,11 @@
 
     let leetify_rating;
     let hltv_rating;
+    let games;
     async function get_leetify_rating(username) {
         leetify_rating = "NOT FOUND";
         hltv_rating = "NOT FOUND";
+        games = null;
         let steam_64_id;
         let leetify_user_id;
         try {
@@ -93,6 +95,26 @@
                 }
 
                 if (leetify_user_id) {
+                    options = {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json, text/plain, */*",
+                            Authorization:
+                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                        },
+                    };
+
+                    const res_history = await fetch(
+                        `https://api.leetify.com/api/games/history?dataSources=faceit&spectatingId=${leetify_user_id}`,
+                        options
+                    );
+
+                    const res_history_body = await res_history.json();
+
+                    if (res_history.ok) {
+                        games = res_history_body.games;
+                    }
+
                     options = {
                         method: "GET",
                         headers: {
@@ -181,59 +203,74 @@
     }
 
     function add_elements() {
-        if (my_elements.length != 0) {
-            remove_my_elements();
-        }
-        // find the shadow root(s) (very cringe)
-        const shadows = Array.from(document.querySelectorAll("*"))
-            .map((el) => el.shadowRoot)
-            .filter(Boolean);
-        shadows.forEach((s) => {
-            let elements = s.querySelectorAll("span");
-            elements.forEach((e) => {
-                if (e.lastChild && e.lastChild.data == "Main Statistics") {
-                    const title = e.parentNode;
-                    const tiles = title.nextSibling;
-                    const divider = tiles.nextSibling;
+        try {
+            if (my_elements.length != 0) {
+                remove_my_elements();
+            }
+            // find the shadow root(s) (very cringe)
+            const shadows = Array.from(document.querySelectorAll("*"))
+                .map((el) => el.shadowRoot)
+                .filter(Boolean);
+            shadows.forEach((s) => {
+                let elements = s.querySelectorAll("span");
+                elements.forEach((e) => {
+                    if (e.lastChild && e.lastChild.data == "Main Statistics") {
+                        const title = e.parentNode;
+                        const tiles = title.nextSibling;
+                        const divider = tiles.nextSibling;
 
-                    const my_title = title.cloneNode(true);
-                    my_title.firstChild.firstChild.data =
-                        "RATINGS (LAST 30 MATCHES)";
+                        const my_title = title.cloneNode(true);
+                        my_title.firstChild.firstChild.data =
+                            "RATINGS (LAST 30 MATCHES)";
 
-                    const my_tiles = tiles.cloneNode(true);
-                    while (my_tiles.childElementCount > 2) {
-                        my_tiles.removeChild(my_tiles.lastChild);
+                        const my_tiles = tiles.cloneNode(true);
+                        while (my_tiles.childElementCount > 2) {
+                            my_tiles.removeChild(my_tiles.lastChild);
+                        }
+                        my_tiles.firstChild.firstChild.firstChild.firstChild.data =
+                            leetify_rating;
+                        my_tiles.firstChild.lastChild.firstChild.firstChild.data =
+                            "LEETIFY RATING";
+                        my_tiles.lastChild.firstChild.firstChild.firstChild.data =
+                            hltv_rating;
+                        my_tiles.lastChild.lastChild.firstChild.firstChild.data =
+                            "HLTV RATING";
+
+                        const my_divider = divider.cloneNode(true);
+
+                        my_elements.push(my_title);
+                        my_elements.push(my_tiles);
+                        my_elements.push(my_divider);
+
+                        divider.parentNode.insertBefore(
+                            my_title,
+                            divider.nextSibling
+                        );
+                        my_title.parentNode.insertBefore(
+                            my_tiles,
+                            my_title.nextSibling
+                        );
+                        my_tiles.parentNode.insertBefore(
+                            my_divider,
+                            my_tiles.nextSibling
+                        );
                     }
-                    my_tiles.firstChild.firstChild.firstChild.firstChild.data =
-                        leetify_rating;
-                    my_tiles.firstChild.lastChild.firstChild.firstChild.data =
-                        "LEETIFY RATING";
-                    my_tiles.lastChild.firstChild.firstChild.firstChild.data =
-                        hltv_rating;
-                    my_tiles.lastChild.lastChild.firstChild.firstChild.data =
-                        "HLTV RATING";
-
-                    const my_divider = divider.cloneNode(true);
-
-                    my_elements.push(my_title);
-                    my_elements.push(my_tiles);
-                    my_elements.push(my_divider);
-
-                    divider.parentNode.insertBefore(
-                        my_title,
-                        divider.nextSibling
-                    );
-                    my_title.parentNode.insertBefore(
-                        my_tiles,
-                        my_title.nextSibling
-                    );
-                    my_tiles.parentNode.insertBefore(
-                        my_divider,
-                        my_tiles.nextSibling
-                    );
-                }
+                    if (e.lastChild && e.lastChild.data == "Match History") {
+                        const table = e.parentNode.nextSibling.firstChild;
+                        if (table) {
+                            for (let i = 1; i < table.childNodes.length; i++) {
+                                table.childNodes[
+                                    i
+                                ].firstChild.lastChild.lastChild.data =
+                                    games[games.length - i].finishedAt;
+                            }
+                        }
+                    }
+                });
             });
-        });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     // Select the node that will be observed for mutations

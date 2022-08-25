@@ -6,7 +6,8 @@
 // @author       shaker
 // @match        *://www.faceit.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=faceit.com
-// @grant        none
+// @grant        GM.getValue
+// @grant        GM.setValue
 // @run-at       document-end
 // @homepageURL  https://github.com/shakerrrr/faceit-leetify-rating
 // @updateURL    https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
@@ -14,8 +15,17 @@
 // @supportURL   https://github.com/shakerrrr/faceit-leetify-rating/issues
 // ==/UserScript==
 
-(function () {
+(async function () {
     "use strict";
+
+    if (window.location.hostname.split(".").includes("leetify")) {
+        await GM.setValue(
+            "leetify_at",
+            window.localStorage.getItem("access_token")
+        );
+    }
+
+    const leetify_access_token = await GM.getValue("leetify_at");
 
     if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
         fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
@@ -75,8 +85,7 @@
                     method: "POST",
                     headers: {
                         Accept: "application/json, text/plain, */*",
-                        Authorization:
-                            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                        Authorization: `Bearer ${leetify_access_token}`,
                         "Content-Type": "application/json",
                     },
                     body: `{"searchTerm":"${steam_64_id}"}`,
@@ -99,8 +108,7 @@
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            Authorization:
-                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                            Authorization: `Bearer ${leetify_access_token}`,
                         },
                     };
 
@@ -119,8 +127,7 @@
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            Authorization:
-                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                            Authorization: `Bearer ${leetify_access_token}`,
                         },
                     };
 
@@ -146,8 +153,7 @@
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            Authorization:
-                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                            Authorization: `Bearer ${leetify_access_token}`,
                         },
                     };
 
@@ -255,6 +261,7 @@
                             my_tiles.nextSibling
                         );
                     }
+
                     if (e.lastChild && e.lastChild.data == "Match History") {
                         const table = e.parentNode.nextSibling.firstChild;
                         if (table) {

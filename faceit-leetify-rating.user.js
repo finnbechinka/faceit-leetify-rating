@@ -259,10 +259,12 @@
                         const table = e.parentNode.nextSibling.firstChild;
                         if (table) {
                             for (let i = 1; i < table.childNodes.length; i++) {
+                                /*
                                 table.childNodes[
                                     i
                                 ].firstChild.lastChild.lastChild.data =
                                     games[games.length - i].finishedAt;
+                                */
                             }
                         }
                     }

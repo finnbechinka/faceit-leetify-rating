@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.3.2
+// @version      0.5.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://www.faceit.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=faceit.com
-// @grant        none
+// @grant        GM.getValue
+// @grant        GM.setValue
 // @run-at       document-end
 // @homepageURL  https://github.com/shakerrrr/faceit-leetify-rating
 // @updateURL    https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
@@ -14,8 +15,17 @@
 // @supportURL   https://github.com/shakerrrr/faceit-leetify-rating/issues
 // ==/UserScript==
 
-(function () {
+(async function () {
     "use strict";
+
+    if (window.location.hostname.split(".").includes("leetify")) {
+        await GM.setValue(
+            "leetify_at",
+            window.localStorage.getItem("access_token")
+        );
+    }
+
+    const leetify_access_token = await GM.getValue("leetify_at");
 
     if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
         fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
@@ -25,7 +35,7 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.3.1",
+                version: "0.5.0",
                 app: "faceit-leetify-rating",
             }),
         })
@@ -44,16 +54,17 @@
 
     let leetify_rating;
     let hltv_rating;
+    let games;
     async function get_leetify_rating(username) {
         leetify_rating = "NOT FOUND";
         hltv_rating = "NOT FOUND";
+        games = [];
         let steam_64_id;
         let leetify_user_id;
         try {
             let options = {
                 method: "GET",
                 headers: {
-                    cookie: "__cf_bm=avF3h9RIT5kjpEh17Z7P1W2Rhs9DcBHJCVtGd5qNR1U-1661058565-0-AcC3JgaL6nN0O5Qc9rMfglt%2FX5DAI813G9zPRstr55AwVOjvOzp%2Bdeov926ilJV5McXtpRCO%2BvuI8o6KRWTRaoY%3D; __cfruid=5f7c8c1f05ecc68841b24e5d3f0dac2c2385dde5-1661058565",
                     accept: "application/json",
                     Authorization:
                         "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
@@ -74,19 +85,8 @@
                     method: "POST",
                     headers: {
                         Accept: "application/json, text/plain, */*",
-                        "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                        "Accept-Encoding": "gzip, deflate, br",
-                        Authorization:
-                            "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                        lvid: "c0ffa415093ba1931134cffe769c5529",
+                        Authorization: `Bearer ${leetify_access_token}`,
                         "Content-Type": "application/json",
-                        DNT: "1",
-                        Connection: "keep-alive",
-                        Referer: "https://beta.leetify.com/",
-                        "Sec-Fetch-Dest": "empty",
-                        "Sec-Fetch-Mode": "cors",
-                        "Sec-Fetch-Site": "same-site",
-                        TE: "trailers",
                     },
                     body: `{"searchTerm":"${steam_64_id}"}`,
                 };
@@ -104,27 +104,36 @@
                 }
 
                 if (leetify_user_id) {
+                    // options = {
+                    //     method: "GET",
+                    //     headers: {
+                    //         Accept: "application/json, text/plain, */*",
+                    //         Authorization: `Bearer ${leetify_access_token}`,
+                    //     },
+                    // };
+
+                    // const res_history = await fetch(
+                    //     `https://api.leetify.com/api/games/history?dataSources=faceit&spectatingId=${leetify_user_id}`,
+                    //     options
+                    // );
+
+                    // const res_history_body = await res_history.json();
+
+                    // if (res_history.ok) {
+                    //     games = res_history_body.games;
+                    //     console.log(games);
+                    // }
+
                     options = {
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            "Accept-Language": "en-US,de;q=0.7,en;q=0.3",
-                            "Accept-Encoding": "gzip, deflate, br",
-                            Authorization:
-                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
-                            lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
-                            DNT: "1",
-                            Connection: "keep-alive",
-                            Referer: "https://beta.leetify.com/",
-                            "Sec-Fetch-Dest": "empty",
-                            "Sec-Fetch-Mode": "cors",
-                            "Sec-Fetch-Site": "same-site",
-                            TE: "trailers",
+                            Authorization: `Bearer ${leetify_access_token}`,
                         },
                     };
 
                     const res_general_data = await fetch(
-                        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
                         options
                     );
                     const res_general_data_body = await res_general_data.json();
@@ -137,9 +146,36 @@
                         hltv_rating =
                             res_general_data_body.generalData.current
                                 .gamesTotals.hltvRating;
-                        console.log(
-                            `lr: ${leetify_rating}\nhltv: ${hltv_rating}`
+                        games = res_general_data_body.generalData.current.games;
+                    }
+
+                    if (leetify_rating == 0.0 && hltv_rating == 0) {
+                        games = [];
+
+                        options = {
+                            method: "GET",
+                            headers: {
+                                Accept: "application/json, text/plain, */*",
+                                Authorization: `Bearer ${leetify_access_token}`,
+                            },
+                        };
+
+                        const res_general_data_alt = await fetch(
+                            `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                            options
                         );
+                        const res_general_data_alt_body =
+                            await res_general_data_alt.json();
+
+                        if (res_general_data.ok) {
+                            leetify_rating = (
+                                res_general_data_alt_body.generalData.current
+                                    .gamesTotals.leetifyRating * 100
+                            ).toFixed(2);
+                            hltv_rating =
+                                res_general_data_alt_body.generalData.current
+                                    .gamesTotals.hltvRating;
+                        }
                     }
                 } else {
                     console.log("no leetify user id");
@@ -148,8 +184,7 @@
                         method: "GET",
                         headers: {
                             Accept: "application/json, text/plain, */*",
-                            Authorization:
-                                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyMmRmMDUzZC0yMjI0LTRlMjYtYmNlMy0xODc2YjdkMDliZTMiLCJpYXQiOjE2NTkxNzk5MTF9.wjnxKbTd2z3KU9t-TbqmWG4MxhPMUicCb8WQADnrskI",
+                            Authorization: `Bearer ${leetify_access_token}`,
                         },
                     };
 
@@ -169,6 +204,9 @@
             } else {
                 console.log("no steam 64 id");
             }
+            console.log(
+                `lr: ${leetify_rating}\nhltv: ${hltv_rating}\ngames: ${games.length}`
+            );
         } catch (error) {
             console.log(error);
         }
@@ -177,12 +215,18 @@
     async function update(url) {
         const url_segments = url.split("/");
         let index;
-        url_segments.forEach((element) => {
-            if (["players", "players-modal"].includes(element)) {
-                index = url_segments.indexOf(element) + 1;
+
+        for (let e of url_segments) {
+            const is_csgo_stats_page =
+                ["players", "players-modal"].includes(e) &&
+                url_segments.includes("stats") &&
+                url_segments.includes("csgo");
+            if (is_csgo_stats_page) {
+                index = url_segments.indexOf(e) + 1;
+                await get_leetify_rating(url_segments[index]);
+                add_elements();
             }
-        });
-        await get_leetify_rating(url_segments[index]);
+        }
     }
 
     let my_elements = [];
@@ -198,59 +242,112 @@
     }
 
     function add_elements() {
-        if (my_elements.length != 0) {
-            remove_my_elements();
-        }
-        // find the shadow root(s) (very cringe)
-        const shadows = Array.from(document.querySelectorAll("*"))
-            .map((el) => el.shadowRoot)
-            .filter(Boolean);
-        shadows.forEach((s) => {
-            let elements = s.querySelectorAll("span");
-            elements.forEach((e) => {
-                if (e.lastChild && e.lastChild.data == "Main Statistics") {
-                    const title = e.parentNode;
-                    const tiles = title.nextSibling;
-                    const divider = tiles.nextSibling;
+        try {
+            if (my_elements.length != 0) {
+                remove_my_elements();
+            }
+            // find the shadow root(s) (very cringe)
+            const shadows = Array.from(document.querySelectorAll("*"))
+                .map((el) => el.shadowRoot)
+                .filter(Boolean);
+            shadows.forEach((s) => {
+                let elements = s.querySelectorAll("span");
+                elements.forEach((e) => {
+                    if (e.lastChild && e.lastChild.data == "Main Statistics") {
+                        const title = e.parentNode;
+                        const tiles = title.nextSibling;
+                        const divider = tiles.nextSibling;
 
-                    const my_title = title.cloneNode(true);
-                    my_title.firstChild.firstChild.data =
-                        "RATINGS (LAST 30 MATCHES)";
+                        const my_title = title.cloneNode(true);
+                        my_title.firstChild.firstChild.data =
+                            "RATINGS (LAST 30 MATCHES)";
 
-                    const my_tiles = tiles.cloneNode(true);
-                    while (my_tiles.childElementCount > 2) {
-                        my_tiles.removeChild(my_tiles.lastChild);
+                        const my_tiles = tiles.cloneNode(true);
+                        while (my_tiles.childElementCount > 2) {
+                            my_tiles.removeChild(my_tiles.lastChild);
+                        }
+                        if (my_tiles.firstChild.firstChild.firstChild) {
+                            my_tiles.firstChild.firstChild.firstChild.firstChild.data =
+                                leetify_rating;
+                            my_tiles.firstChild.lastChild.firstChild.firstChild.data =
+                                "LEETIFY RATING";
+                            my_tiles.lastChild.firstChild.firstChild.firstChild.data =
+                                hltv_rating;
+                            my_tiles.lastChild.lastChild.firstChild.firstChild.data =
+                                "HLTV RATING";
+
+                            const my_divider = divider.cloneNode(true);
+
+                            my_elements.push(my_title);
+                            my_elements.push(my_tiles);
+                            my_elements.push(my_divider);
+
+                            divider.parentNode.insertBefore(
+                                my_title,
+                                divider.nextSibling
+                            );
+                            my_title.parentNode.insertBefore(
+                                my_tiles,
+                                my_title.nextSibling
+                            );
+                            my_tiles.parentNode.insertBefore(
+                                my_divider,
+                                my_tiles.nextSibling
+                            );
+                        }
                     }
-                    my_tiles.firstChild.firstChild.firstChild.firstChild.data =
-                        leetify_rating;
-                    my_tiles.firstChild.lastChild.firstChild.firstChild.data =
-                        "LEETIFY RATING";
-                    my_tiles.lastChild.firstChild.firstChild.firstChild.data =
-                        hltv_rating;
-                    my_tiles.lastChild.lastChild.firstChild.firstChild.data =
-                        "HLTV RATING";
 
-                    const my_divider = divider.cloneNode(true);
+                    if (
+                        e.lastChild &&
+                        e.lastChild.data == "Match History" &&
+                        games.length == 30
+                    ) {
+                        const table = e.parentNode.nextSibling.firstChild;
+                        if (table && table.childNodes.length > 0) {
+                            let games_index = 29;
+                            const my_element =
+                                table.childNodes[1].childNodes[2].lastChild.lastChild.cloneNode(
+                                    true
+                                );
+                            for (
+                                let i = 1;
+                                i < table.childNodes.length && games_index >= 0;
+                                i++
+                            ) {
+                                const map =
+                                    table.childNodes[i].childNodes[4].firstChild
+                                        .lastChild.data;
+                                if (map == games[games_index].mapName) {
+                                    games_index--;
+                                    const new_element =
+                                        my_element.cloneNode(true);
+                                    if (new_element.childNodes.length > 0) {
+                                        new_element.removeChild(
+                                            new_element.firstChild
+                                        );
+                                        new_element.lastChild.data = `Leetify Rating: ${(
+                                            games[games.length - i]
+                                                .leetifyRating * 100
+                                        ).toFixed(2)}`;
 
-                    my_elements.push(my_title);
-                    my_elements.push(my_tiles);
-                    my_elements.push(my_divider);
-
-                    divider.parentNode.insertBefore(
-                        my_title,
-                        divider.nextSibling
-                    );
-                    my_title.parentNode.insertBefore(
-                        my_tiles,
-                        my_title.nextSibling
-                    );
-                    my_tiles.parentNode.insertBefore(
-                        my_divider,
-                        my_tiles.nextSibling
-                    );
-                }
+                                        table.childNodes[
+                                            i
+                                        ].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
+                                            new_element,
+                                            table.childNodes[i].childNodes[2]
+                                                .lastChild.lastChild.nextSibling
+                                        );
+                                        my_elements.push(new_element);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
             });
-        });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     // Select the node that will be observed for mutations
@@ -268,9 +365,11 @@
         if (current_url != old_url) {
             old_url = current_url;
             remove_my_elements();
+        }
+
+        if (my_elements.length < 33) {
             await update(current_url);
         }
-        add_elements();
     };
 
     // Create an observer instance linked to the callback function

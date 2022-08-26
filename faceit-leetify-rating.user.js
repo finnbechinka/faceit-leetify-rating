@@ -132,7 +132,7 @@
                     };
 
                     const res_general_data = await fetch(
-                        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
                         options
                     );
                     const res_general_data_body = await res_general_data.json();

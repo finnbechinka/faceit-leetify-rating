@@ -146,6 +146,33 @@
                             res_general_data_body.generalData.current
                                 .gamesTotals.hltvRating;
                     }
+
+                    if (leetify_rating == 0.0 && hltv_rating == 0) {
+                        options = {
+                            method: "GET",
+                            headers: {
+                                Accept: "application/json, text/plain, */*",
+                                Authorization: `Bearer ${leetify_access_token}`,
+                            },
+                        };
+
+                        const res_general_data_alt = await fetch(
+                            `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                            options
+                        );
+                        const res_general_data_alt_body =
+                            await res_general_data_alt.json();
+
+                        if (res_general_data.ok) {
+                            leetify_rating = (
+                                res_general_data_alt_body.generalData.current
+                                    .gamesTotals.leetifyRating * 100
+                            ).toFixed(2);
+                            hltv_rating =
+                                res_general_data_alt_body.generalData.current
+                                    .gamesTotals.hltvRating;
+                        }
+                    }
                 } else {
                     console.log("no leetify user id");
 

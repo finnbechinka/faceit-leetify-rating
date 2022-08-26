@@ -315,14 +315,11 @@
     // Options for the observer (which mutations to observe)
     const config = { attributes: false, childList: true, subtree: true };
 
-    let old_url;
-
     // Callback function to execute when mutations are observed
     const callback = async (mutationList, observer) => {
         let current_url = window.location.href;
 
-        if (current_url != old_url) {
-            old_url = current_url;
+        if (my_elements.length < 3) {
             remove_my_elements();
             await update(current_url);
         }

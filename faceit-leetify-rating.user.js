@@ -316,15 +316,21 @@
                                     table.childNodes[i].childNodes[4].firstChild
                                         .lastChild.data;
                                 if (map == games[games_index].mapName) {
+                                    const rating = (
+                                        games[games_index].leetifyRating * 100
+                                    ).toFixed(2);
                                     const div = document.createElement("div");
-                                    div.style.color = "rgb(255, 255, 255)";
+                                    if (rating > 2) {
+                                        div.style.color = "#32d35a";
+                                    } else if (rating < -2) {
+                                        div.style.color = "#ff002b";
+                                    } else {
+                                        div.style.color = "rgb(255, 255, 255)";
+                                    }
                                     div.style.fontWeight = "normal";
                                     div.style.textTransform = "none";
                                     const text = document.createTextNode(
-                                        `Leetify Rating: ${(
-                                            games[games_index].leetifyRating *
-                                            100
-                                        ).toFixed(2)}`
+                                        `Leetify Rating: ${rating}`
                                     );
                                     div.appendChild(text);
 

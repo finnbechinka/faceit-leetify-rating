@@ -266,45 +266,80 @@
                         while (my_tiles.childElementCount > 2) {
                             my_tiles.removeChild(my_tiles.lastChild);
                         }
-                        my_tiles.firstChild.firstChild.firstChild.firstChild.data =
-                            leetify_rating;
-                        my_tiles.firstChild.lastChild.firstChild.firstChild.data =
-                            "LEETIFY RATING";
-                        my_tiles.lastChild.firstChild.firstChild.firstChild.data =
-                            hltv_rating;
-                        my_tiles.lastChild.lastChild.firstChild.firstChild.data =
-                            "HLTV RATING";
+                        if (my_tiles.firstChild.firstChild.firstChild) {
+                            my_tiles.firstChild.firstChild.firstChild.firstChild.data =
+                                leetify_rating;
+                            my_tiles.firstChild.lastChild.firstChild.firstChild.data =
+                                "LEETIFY RATING";
+                            my_tiles.lastChild.firstChild.firstChild.firstChild.data =
+                                hltv_rating;
+                            my_tiles.lastChild.lastChild.firstChild.firstChild.data =
+                                "HLTV RATING";
 
-                        const my_divider = divider.cloneNode(true);
+                            const my_divider = divider.cloneNode(true);
 
-                        my_elements.push(my_title);
-                        my_elements.push(my_tiles);
-                        my_elements.push(my_divider);
+                            my_elements.push(my_title);
+                            my_elements.push(my_tiles);
+                            my_elements.push(my_divider);
 
-                        divider.parentNode.insertBefore(
-                            my_title,
-                            divider.nextSibling
-                        );
-                        my_title.parentNode.insertBefore(
-                            my_tiles,
-                            my_title.nextSibling
-                        );
-                        my_tiles.parentNode.insertBefore(
-                            my_divider,
-                            my_tiles.nextSibling
-                        );
+                            divider.parentNode.insertBefore(
+                                my_title,
+                                divider.nextSibling
+                            );
+                            my_title.parentNode.insertBefore(
+                                my_tiles,
+                                my_title.nextSibling
+                            );
+                            my_tiles.parentNode.insertBefore(
+                                my_divider,
+                                my_tiles.nextSibling
+                            );
+                        }
                     }
 
-                    if (e.lastChild && e.lastChild.data == "Match History") {
+                    if (
+                        e.lastChild &&
+                        e.lastChild.data == "Match History" &&
+                        games.length == 30
+                    ) {
                         const table = e.parentNode.nextSibling.firstChild;
-                        if (table) {
-                            for (let i = 1; i < table.childNodes.length; i++) {
-                                /*
-                                table.childNodes[
-                                    i
-                                ].firstChild.lastChild.lastChild.data =
-                                    games[games.length - i].finishedAt;
-                                */
+                        if (table && table.childNodes.length > 0) {
+                            let games_index = 29;
+                            const my_element =
+                                table.childNodes[1].childNodes[2].lastChild.lastChild.cloneNode(
+                                    true
+                                );
+                            for (
+                                let i = 1;
+                                i < table.childNodes.length && games_index >= 0;
+                                i++
+                            ) {
+                                const map =
+                                    table.childNodes[i].childNodes[4].firstChild
+                                        .lastChild.data;
+                                if (map == games[games_index].mapName) {
+                                    games_index--;
+                                    const new_element =
+                                        my_element.cloneNode(true);
+                                    if (new_element.childNodes.length > 0) {
+                                        new_element.removeChild(
+                                            new_element.firstChild
+                                        );
+                                        new_element.lastChild.data = `Leetify Rating: ${(
+                                            games[games.length - i]
+                                                .leetifyRating * 100
+                                        ).toFixed(2)}`;
+
+                                        table.childNodes[
+                                            i
+                                        ].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
+                                            new_element,
+                                            table.childNodes[i].childNodes[2]
+                                                .lastChild.lastChild.nextSibling
+                                        );
+                                        my_elements.push(new_element);
+                                    }
+                                }
                             }
                         }
                     }
@@ -332,7 +367,7 @@
             remove_my_elements();
         }
 
-        if (my_elements.length < 3) {
+        if (my_elements.length < 33) {
             await update(current_url);
         }
     };

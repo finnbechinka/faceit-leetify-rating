@@ -58,7 +58,7 @@
     async function get_leetify_rating(username) {
         leetify_rating = "NOT FOUND";
         hltv_rating = "NOT FOUND";
-        games = null;
+        games = [];
         let steam_64_id;
         let leetify_user_id;
         try {
@@ -104,24 +104,25 @@
                 }
 
                 if (leetify_user_id) {
-                    options = {
-                        method: "GET",
-                        headers: {
-                            Accept: "application/json, text/plain, */*",
-                            Authorization: `Bearer ${leetify_access_token}`,
-                        },
-                    };
+                    // options = {
+                    //     method: "GET",
+                    //     headers: {
+                    //         Accept: "application/json, text/plain, */*",
+                    //         Authorization: `Bearer ${leetify_access_token}`,
+                    //     },
+                    // };
 
-                    const res_history = await fetch(
-                        `https://api.leetify.com/api/games/history?dataSources=faceit&spectatingId=${leetify_user_id}`,
-                        options
-                    );
+                    // const res_history = await fetch(
+                    //     `https://api.leetify.com/api/games/history?dataSources=faceit&spectatingId=${leetify_user_id}`,
+                    //     options
+                    // );
 
-                    const res_history_body = await res_history.json();
+                    // const res_history_body = await res_history.json();
 
-                    if (res_history.ok) {
-                        games = res_history_body.games;
-                    }
+                    // if (res_history.ok) {
+                    //     games = res_history_body.games;
+                    //     console.log(games);
+                    // }
 
                     options = {
                         method: "GET",
@@ -145,9 +146,12 @@
                         hltv_rating =
                             res_general_data_body.generalData.current
                                 .gamesTotals.hltvRating;
+                        games = res_general_data_body.generalData.current.games;
                     }
 
                     if (leetify_rating == 0.0 && hltv_rating == 0) {
+                        games = [];
+
                         options = {
                             method: "GET",
                             headers: {
@@ -200,7 +204,9 @@
             } else {
                 console.log("no steam 64 id");
             }
-            console.log(`lr: ${leetify_rating}\nhltv: ${hltv_rating}`);
+            console.log(
+                `lr: ${leetify_rating}\nhltv: ${hltv_rating}\ngames: ${games.length}`
+            );
         } catch (error) {
             console.log(error);
         }

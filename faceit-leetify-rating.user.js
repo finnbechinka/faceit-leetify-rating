@@ -30,9 +30,15 @@
                     window.localStorage.getItem("access_token")
                 );
                 console.log("token set");
+                if (
+                    window.location.href ==
+                    "https://beta.leetify.com/faceit-leetify-rating"
+                ) {
+                    window.close();
+                }
             } else {
                 console.log("getting token");
-                window.open("https://beta.leetify.com/app");
+                window.open("https://beta.leetify.com/faceit-leetify-rating");
                 window.location.reload();
             }
         } else {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.7.0
+// @version      0.7.1
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -48,7 +48,7 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.7.0",
+                version: "0.7.1",
                 app: "faceit-leetify-rating",
             }),
         })
@@ -88,8 +88,8 @@
                 `https://open.faceit.com/data/v4/players?nickname=${username}`,
                 options
             );
-            const res_player_body = await res_player.json();
             if (res_player.ok) {
+                const res_player_body = await res_player.json();
                 steam_64_id = res_player_body.games.csgo.game_player_id;
             }
 
@@ -108,9 +108,9 @@
                     "https://api.leetify.com/api/user/search",
                     options
                 );
-                const res_search_body = await res_search.json();
 
                 if (res_search.ok) {
+                    const res_search_body = await res_search.json();
                     if (res_search_body.length > 0) {
                         leetify_user_id = res_search_body[0].userId;
                     }
@@ -129,9 +129,10 @@
                         `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
                         options
                     );
-                    const res_general_data_body = await res_general_data.json();
 
                     if (res_general_data.ok) {
+                        const res_general_data_body =
+                            await res_general_data.json();
                         leetify_rating = (
                             res_general_data_body.generalData.current
                                 .gamesTotals.leetifyRating * 100
@@ -157,10 +158,10 @@
                             `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
                             options
                         );
-                        const res_general_data_alt_body =
-                            await res_general_data_alt.json();
 
                         if (res_general_data.ok) {
+                            const res_general_data_alt_body =
+                                await res_general_data_alt.json();
                             leetify_rating = (
                                 res_general_data_alt_body.generalData.current
                                     .gamesTotals.leetifyRating * 100
@@ -184,9 +185,10 @@
                         options
                     );
 
-                    const res_alternative_body = await res_alternative.json();
-
                     if (res_alternative.ok) {
+                        const res_alternative_body =
+                            await res_alternative.json();
+
                         leetify_rating = (
                             res_alternative_body.ratings.leetify * 100
                         ).toFixed(2);
@@ -194,9 +196,11 @@
                 }
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     }
+
+    let last_username;
 
     async function update(url) {
         const url_segments = url.split("/");
@@ -209,7 +213,11 @@
                 url_segments.includes("csgo");
             if (is_csgo_stats_page) {
                 index = url_segments.indexOf(e) + 1;
-                await get_leetify_rating(url_segments[index]);
+                let username = url_segments[index];
+                if (username != last_username) {
+                    last_username = username;
+                    await get_leetify_rating(username);
+                }
                 add_elements();
             }
         }
@@ -352,7 +360,7 @@
                 });
             });
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
     }
 

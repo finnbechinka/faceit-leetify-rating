@@ -23,13 +23,11 @@
 
     async function get_leetify_at() {
         if (!(await GM.getValue("leetify_at"))) {
-            console.log("token not found");
             if (window.location.hostname.split(".").includes("leetify")) {
                 await GM.setValue(
                     "leetify_at",
                     window.localStorage.getItem("access_token")
                 );
-                console.log("token set");
                 if (
                     window.location.href ==
                     "https://beta.leetify.com/faceit-leetify-rating"
@@ -37,12 +35,8 @@
                     window.close();
                 }
             } else {
-                console.log("getting token");
                 window.open("https://beta.leetify.com/faceit-leetify-rating");
-                window.location.reload();
             }
-        } else {
-            console.log("token found");
         }
     }
 
@@ -123,26 +117,6 @@
                 }
 
                 if (leetify_user_id) {
-                    // options = {
-                    //     method: "GET",
-                    //     headers: {
-                    //         Accept: "application/json, text/plain, */*",
-                    //         Authorization: `Bearer ${leetify_access_token}`,
-                    //     },
-                    // };
-
-                    // const res_history = await fetch(
-                    //     `https://api.leetify.com/api/games/history?dataSources=faceit&spectatingId=${leetify_user_id}`,
-                    //     options
-                    // );
-
-                    // const res_history_body = await res_history.json();
-
-                    // if (res_history.ok) {
-                    //     games = res_history_body.games;
-                    //     console.log(games);
-                    // }
-
                     options = {
                         method: "GET",
                         headers: {
@@ -197,8 +171,6 @@
                         }
                     }
                 } else {
-                    console.log("no leetify user id");
-
                     options = {
                         method: "GET",
                         headers: {
@@ -220,12 +192,7 @@
                         ).toFixed(2);
                     }
                 }
-            } else {
-                console.log("no steam 64 id");
             }
-            console.log(
-                `lr: ${leetify_rating}\nhltv: ${hltv_rating}\ngames: ${games.length}`
-            );
         } catch (error) {
             console.log(error);
         }

@@ -18,15 +18,27 @@
 
 (async function () {
     "use strict";
-
-    if (window.location.hostname.split(".").includes("leetify")) {
-        await GM.setValue(
-            "leetify_at",
-            window.localStorage.getItem("access_token")
-        );
-    }
-
+    await get_leetify_at();
     const leetify_access_token = await GM.getValue("leetify_at");
+
+    async function get_leetify_at() {
+        if (!(await GM.getValue("leetify_at"))) {
+            console.log("token not found");
+            if (window.location.hostname.split(".").includes("leetify")) {
+                await GM.setValue(
+                    "leetify_at",
+                    window.localStorage.getItem("access_token")
+                );
+                console.log("token set");
+            } else {
+                console.log("getting token");
+                window.open("https://beta.leetify.com/app");
+                window.location.reload();
+            }
+        } else {
+            console.log("token found");
+        }
+    }
 
     if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
         fetch("https://shaker-api.netlify.app/.netlify/functions/api", {

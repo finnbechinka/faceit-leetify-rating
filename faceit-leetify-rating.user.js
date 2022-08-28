@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.7.1
+// @version      0.7.2
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -48,7 +48,7 @@
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                version: "0.7.1",
+                version: "0.7.2",
                 app: "faceit-leetify-rating",
             }),
         })
@@ -335,15 +335,41 @@
                                             .lastChild.lastChild.nextSibling
                                     );
                                     if (
-                                        table.childNodes[i].childNodes[2]
-                                            .firstChild.firstChild.data.length >
-                                        9
+                                        (table.childNodes[i].childNodes[2]
+                                            .firstChild.firstChild.data
+                                            .length == 29 &&
+                                            rating.length == 4) ||
+                                        (table.childNodes[i].childNodes[2]
+                                            .firstChild.firstChild.data
+                                            .length == 30 &&
+                                            rating.length == 5)
                                     ) {
                                         const str =
                                             table.childNodes[i].childNodes[2]
                                                 .firstChild.firstChild.data;
                                         const new_str =
                                             str.substr(0, 3) +
+                                            str.substr(str.length - 6, 6);
+                                        table.childNodes[
+                                            i
+                                        ].childNodes[2].firstChild.firstChild.data =
+                                            new_str;
+                                    }
+                                    if (
+                                        (table.childNodes[i].childNodes[2]
+                                            .firstChild.firstChild.data
+                                            .length == 30 &&
+                                            rating.length == 4) ||
+                                        (table.childNodes[i].childNodes[2]
+                                            .firstChild.firstChild.data
+                                            .length == 31 &&
+                                            rating.length == 5)
+                                    ) {
+                                        const str =
+                                            table.childNodes[i].childNodes[2]
+                                                .firstChild.firstChild.data;
+                                        const new_str =
+                                            str.substr(0, 4) +
                                             str.substr(str.length - 6, 6);
                                         table.childNodes[
                                             i
@@ -379,16 +405,27 @@
         if (current_url != old_url) {
             old_url = current_url;
             remove_my_elements();
-        }
-
-        if (my_elements.length < 33333) {
-            await update(current_url);
+            start();
         }
     };
 
     // Create an observer instance linked to the callback function
     const observer = new MutationObserver(callback);
 
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
+    window.onload = () => {
+        // Start observing the target node for configured mutations
+        observer.observe(targetNode, config);
+        start();
+    };
+
+    function start() {
+        let update_interval = setInterval(async () => {
+            let current_url = window.location.href;
+            await update(current_url);
+        }, 1000);
+
+        setTimeout(() => {
+            clearInterval(update_interval);
+        }, 30000);
+    }
 })();

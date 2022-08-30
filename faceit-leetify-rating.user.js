@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.1.0
+// @version      1.1.1
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -70,7 +70,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "1.1.0",
+        version: "1.1.1",
         app: "faceit-leetify-rating",
       }),
     })
@@ -498,7 +498,7 @@
       old_url = current_url;
       match_data = undefined;
       remove_my_elements();
-      start();
+      // start();
     }
   };
 
@@ -517,8 +517,8 @@
       await update(current_url);
     }, 1000);
 
-    setTimeout(() => {
-      clearInterval(update_interval);
-    }, 30000);
+    // setTimeout(() => {
+    //   clearInterval(update_interval);
+    // }, 30000);
   }
 })();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      0.7.2
+// @version      1.0.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -65,6 +65,7 @@
   let leetify_rating;
   let hltv_rating;
   let games;
+  let match_data;
   async function get_leetify_rating(username) {
     leetify_rating = "NOT FOUND";
     hltv_rating = "NOT FOUND";
@@ -193,9 +194,56 @@
     }
   }
 
-  function add_match_elements() {}
+  function add_match_elements(match_data) {
+    try {
+      if (my_elements.length != 0) {
+        remove_my_elements();
+      }
+      // find the shadow root(s) (very cringe)
+      const shadows = Array.from(document.querySelectorAll("*"))
+        .map((el) => el.shadowRoot)
+        .filter(Boolean);
+      shadows.forEach((s) => {
+        let elements = s.querySelectorAll("span");
+        elements.forEach((e) => {
+          if (e.lastChild && e.lastChild.data == "Kills") {
+            const td = e.parentNode;
+            const my_td = td.cloneNode(true);
+            my_td.lastChild.lastChild.data = "Leetify";
+            td.parentNode.insertBefore(my_td, td);
+            my_elements.push(my_td);
+
+            const players = td.parentNode.parentNode.nextSibling;
+            for (let player of players.childNodes) {
+              const name =
+                player.firstChild.firstChild.firstChild.lastChild.lastChild
+                  .data;
+              const my_td2 = player.firstChild.nextSibling.cloneNode(true);
+              for (let stats of match_data.playerStats) {
+                if (stats.name == name) {
+                  const leetify_rating = (stats.leetifyRating * 100).toFixed(2);
+                  my_td2.lastChild.lastChild.data = leetify_rating;
+                  if (leetify_rating > 2) {
+                    my_td2.lastChild.style.color = "#32d35a";
+                  }
+                  if (leetify_rating < -2) {
+                    my_td2.lastChild.style.color = "#ff002b";
+                  }
+                }
+              }
+              player.insertBefore(my_td2, player.firstChild.nextSibling);
+              my_elements.push(my_td2);
+            }
+          }
+        });
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   async function get_match_data(match_id) {
+    match_data;
     try {
       let steam_64_ids = [];
       let options = {
@@ -221,7 +269,6 @@
         }
       }
       if (steam_64_ids) {
-        console.log(steam_64_ids);
         let all_games = [];
         for (let id of steam_64_ids) {
           let leetify_id;
@@ -281,7 +328,7 @@
               );
               if (res_leetify_match.ok) {
                 const res_leetify_match_body = await res_leetify_match.json();
-                console.log(res_leetify_match_body);
+                return res_leetify_match_body;
               }
               break;
             }
@@ -292,6 +339,7 @@
       console.error(error);
     }
   }
+
   let last_username;
   let last_match_id;
   async function update(url) {
@@ -320,7 +368,10 @@
         const match_id = url_segments[url_segments.length - 2];
         if (last_match_id != match_id) {
           last_match_id = match_id;
-          get_match_data(match_id);
+          match_data = await get_match_data(match_id);
+        }
+        if (match_data) {
+          add_match_elements(match_data);
         }
       }
     }
@@ -491,6 +542,7 @@
 
     if (current_url != old_url) {
       old_url = current_url;
+      match_data = undefined;
       remove_my_elements();
       start();
     }

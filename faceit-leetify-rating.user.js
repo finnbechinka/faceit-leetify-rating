@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.1.1
+// @version      1.2.1
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -42,6 +42,12 @@
       Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
     },
   };
+  let my_elements = [];
+  let match_data;
+  let ratings;
+  let old_url;
+  let last_username;
+  let last_match_id;
 
   async function get_leetify_at() {
     if (!(await GM.getValue("leetify_at"))) {
@@ -70,7 +76,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "1.1.1",
+        version: "1.2.1",
         app: "faceit-leetify-rating",
       }),
     })
@@ -84,14 +90,10 @@
       });
   }
 
-  let leetify_rating;
-  let hltv_rating;
-  let games;
-  let match_data;
   async function get_leetify_rating(username) {
-    leetify_rating = "NOT FOUND";
-    hltv_rating = "NOT FOUND";
-    games = [];
+    let leetify_rating = "NOT FOUND";
+    let hltv_rating = "NOT FOUND";
+    let games = [];
     let steam_64_id;
     let leetify_user_id;
     try {
@@ -171,6 +173,7 @@
           }
         }
       }
+      return { leetify: leetify_rating, hltv: hltv_rating, games: games };
     } catch (error) {
       console.error(error);
     }
@@ -225,7 +228,6 @@
   }
 
   async function get_match_data(match_id) {
-    match_data;
     try {
       let steam_64_ids = [];
       const res_match = await fetch(
@@ -294,45 +296,6 @@
     }
   }
 
-  let last_username;
-  let last_match_id;
-  async function update(url) {
-    const url_segments = url.split("/");
-    let index;
-
-    for (let e of url_segments) {
-      const is_csgo_stats_page =
-        ["players", "players-modal"].includes(e) &&
-        url_segments.includes("stats") &&
-        url_segments.includes("csgo");
-      const is_match_scoreboard_page =
-        url_segments.includes("csgo") &&
-        url_segments.includes("room") &&
-        url_segments.includes("scoreboard");
-      if (is_csgo_stats_page) {
-        index = url_segments.indexOf(e) + 1;
-        let username = url_segments[index];
-        if (username != last_username) {
-          last_username = username;
-          await get_leetify_rating(username);
-        }
-        add_elements();
-      }
-      if (is_match_scoreboard_page) {
-        const match_id = url_segments[url_segments.length - 2];
-        if (last_match_id != match_id) {
-          last_match_id = match_id;
-          match_data = await get_match_data(match_id);
-        }
-        if (match_data) {
-          add_match_elements(match_data);
-        }
-      }
-    }
-  }
-
-  let my_elements = [];
-
   function remove_my_elements() {
     my_elements.forEach((element) => {
       let parent = element.parentNode;
@@ -343,7 +306,7 @@
     my_elements = [];
   }
 
-  function add_elements() {
+  function add_elements(ratings) {
     try {
       if (my_elements.length != 0) {
         remove_my_elements();
@@ -369,11 +332,11 @@
             }
             if (my_tiles.firstChild.firstChild.firstChild) {
               my_tiles.firstChild.firstChild.firstChild.firstChild.data =
-                leetify_rating;
+                ratings.leetify;
               my_tiles.firstChild.lastChild.firstChild.firstChild.data =
                 "LEETIFY RATING";
               my_tiles.lastChild.firstChild.firstChild.firstChild.data =
-                hltv_rating;
+                ratings.hltv;
               my_tiles.lastChild.lastChild.firstChild.firstChild.data =
                 "HLTV RATING";
 
@@ -395,7 +358,7 @@
           if (
             e.lastChild &&
             e.lastChild.data == "Match History" &&
-            games.length == 30
+            ratings.games.length == 30
           ) {
             const table = e.parentNode.nextSibling.firstChild;
             if (table && table.childNodes.length > 0) {
@@ -408,9 +371,9 @@
               ) {
                 const map =
                   table.childNodes[i].childNodes[4].firstChild.lastChild.data;
-                if (map == games[games_index].mapName) {
+                if (map == ratings.games[games_index].mapName) {
                   const rating = (
-                    games[games_index].leetifyRating * 100
+                    ratings.games[games_index].leetifyRating * 100
                   ).toFixed(2);
                   const div = document.createElement("div");
                   if (rating > 2) {
@@ -482,13 +445,48 @@
     }
   }
 
+  async function update(url) {
+    const url_segments = url.split("/");
+    let index;
+
+    for (let e of url_segments) {
+      const is_csgo_stats_page =
+        ["players", "players-modal"].includes(e) &&
+        url_segments.includes("stats") &&
+        url_segments.includes("csgo");
+      const is_match_scoreboard_page =
+        url_segments.includes("csgo") &&
+        url_segments.includes("room") &&
+        url_segments.includes("scoreboard");
+      if (is_csgo_stats_page) {
+        index = url_segments.indexOf(e) + 1;
+        let username = url_segments[index];
+        if (username != last_username) {
+          last_username = username;
+          ratings = await get_leetify_rating(username);
+        }
+        if (ratings) {
+          add_elements(ratings);
+        }
+      }
+      if (is_match_scoreboard_page) {
+        const match_id = url_segments[url_segments.length - 2];
+        if (last_match_id != match_id) {
+          last_match_id = match_id;
+          match_data = await get_match_data(match_id);
+        }
+        if (match_data) {
+          add_match_elements(match_data);
+        }
+      }
+    }
+  }
+
   // Select the node that will be observed for mutations
   const targetNode = document.body;
 
   // Options for the observer (which mutations to observe)
   const config = { attributes: false, childList: true, subtree: true };
-
-  let old_url;
 
   // Callback function to execute when mutations are observed
   const callback = async (mutationList, observer) => {

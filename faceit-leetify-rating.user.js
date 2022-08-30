@@ -193,8 +193,107 @@
     }
   }
 
-  let last_username;
+  function add_match_elements() {}
 
+  async function get_match_data(match_id) {
+    try {
+      let steam_64_ids = [];
+      let options = {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
+        },
+      };
+
+      const res_match = await fetch(
+        `https://open.faceit.com/data/v4/matches/${match_id}`,
+        options
+      );
+      if (res_match.ok) {
+        const res_match_body = await res_match.json();
+
+        for (let player of res_match_body.teams.faction1.roster) {
+          steam_64_ids.push(player.game_player_id);
+        }
+        for (let player of res_match_body.teams.faction2.roster) {
+          steam_64_ids.push(player.game_player_id);
+        }
+      }
+      if (steam_64_ids) {
+        console.log(steam_64_ids);
+        let all_games = [];
+        for (let id of steam_64_ids) {
+          let leetify_id;
+          options = {
+            method: "POST",
+            headers: {
+              Accept: "application/json, text/plain, */*",
+              Authorization: `Bearer ${leetify_access_token}`,
+              "Content-Type": "application/json",
+            },
+            body: `{"searchTerm":"${id}"}`,
+          };
+
+          const res_search = await fetch(
+            "https://api.leetify.com/api/user/search",
+            options
+          );
+
+          if (res_search.ok) {
+            const res_search_body = await res_search.json();
+            if (res_search_body.length > 0) {
+              leetify_id = res_search_body[0].userId;
+              let options = {
+                method: "GET",
+                headers: {
+                  Accept: "application/json, text/plain, */*",
+                  Authorization: `Bearer ${leetify_access_token}`,
+                },
+              };
+
+              const res_history = await fetch(
+                `https://api.leetify.com/api/games/history?dataSources=faceit&periods=%7B%22currentPeriod%22%3A%7B%22startDate%22%3A%2201.01.2015%22,%22endDate%22%3A%2201.01.3000%22%7D,%22previousPeriod%22%3A%7B%22startDate%22%3A%2201.10.2014%22,%22endDate%22%3A%2224.12.2014%22%7D%7D&spectatingId=${leetify_id}`,
+                options
+              );
+              if (res_history.ok) {
+                const res_history_body = await res_history.json();
+                all_games = all_games.concat(res_history_body.games);
+              }
+            }
+          }
+        }
+        if (all_games.length > 0) {
+          for (let game of all_games) {
+            if (game.faceitMatchId == match_id) {
+              let options = {
+                method: "GET",
+                headers: {
+                  Accept: "application/json",
+                  Authorization: `Bearer ${leetify_access_token}`,
+                  lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+                },
+              };
+
+              const res_leetify_match = await fetch(
+                `https://api.leetify.com/api/games/${game.id}`,
+                options
+              );
+              if (res_leetify_match.ok) {
+                const res_leetify_match_body = await res_leetify_match.json();
+                console.log(res_leetify_match_body);
+              }
+              break;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  let last_username;
+  let last_match_id;
   async function update(url) {
     const url_segments = url.split("/");
     let index;
@@ -204,6 +303,10 @@
         ["players", "players-modal"].includes(e) &&
         url_segments.includes("stats") &&
         url_segments.includes("csgo");
+      const is_match_scoreboard_page =
+        url_segments.includes("csgo") &&
+        url_segments.includes("room") &&
+        url_segments.includes("scoreboard");
       if (is_csgo_stats_page) {
         index = url_segments.indexOf(e) + 1;
         let username = url_segments[index];
@@ -212,6 +315,13 @@
           await get_leetify_rating(username);
         }
         add_elements();
+      }
+      if (is_match_scoreboard_page) {
+        const match_id = url_segments[url_segments.length - 2];
+        if (last_match_id != match_id) {
+          last_match_id = match_id;
+          get_match_data(match_id);
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.0.0
+// @version      1.1.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -20,6 +20,28 @@
   "use strict";
   await get_leetify_at();
   const leetify_access_token = await GM.getValue("leetify_at");
+  const leetify_post_options = {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      Authorization: `Bearer ${leetify_access_token}`,
+      "Content-Type": "application/json",
+    },
+  };
+  const leetify_get_options = {
+    method: "GET",
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      Authorization: `Bearer ${leetify_access_token}`,
+    },
+  };
+  const faceit_get_options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
+    },
+  };
 
   async function get_leetify_at() {
     if (!(await GM.getValue("leetify_at"))) {
@@ -48,7 +70,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "0.7.2",
+        version: "1.1.0",
         app: "faceit-leetify-rating",
       }),
     })
@@ -73,17 +95,9 @@
     let steam_64_id;
     let leetify_user_id;
     try {
-      let options = {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
-        },
-      };
-
       const res_player = await fetch(
         `https://open.faceit.com/data/v4/players?nickname=${username}`,
-        options
+        faceit_get_options
       );
       if (res_player.ok) {
         const res_player_body = await res_player.json();
@@ -91,19 +105,12 @@
       }
 
       if (steam_64_id) {
-        options = {
-          method: "POST",
-          headers: {
-            Accept: "application/json, text/plain, */*",
-            Authorization: `Bearer ${leetify_access_token}`,
-            "Content-Type": "application/json",
-          },
-          body: `{"searchTerm":"${steam_64_id}"}`,
-        };
+        let options = leetify_post_options;
+        options.body = `{"searchTerm":"${steam_64_id}"}`;
 
         const res_search = await fetch(
           "https://api.leetify.com/api/user/search",
-          options
+          leetify_post_options
         );
 
         if (res_search.ok) {
@@ -114,17 +121,9 @@
         }
 
         if (leetify_user_id) {
-          options = {
-            method: "GET",
-            headers: {
-              Accept: "application/json, text/plain, */*",
-              Authorization: `Bearer ${leetify_access_token}`,
-            },
-          };
-
           const res_general_data = await fetch(
             `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
-            options
+            leetify_get_options
           );
 
           if (res_general_data.ok) {
@@ -140,18 +139,9 @@
 
           if (leetify_rating == 0.0 && hltv_rating == 0) {
             games = [];
-
-            options = {
-              method: "GET",
-              headers: {
-                Accept: "application/json, text/plain, */*",
-                Authorization: `Bearer ${leetify_access_token}`,
-              },
-            };
-
             const res_general_data_alt = await fetch(
               `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
-              options
+              leetify_get_options
             );
 
             if (res_general_data.ok) {
@@ -167,17 +157,9 @@
             }
           }
         } else {
-          options = {
-            method: "GET",
-            headers: {
-              Accept: "application/json, text/plain, */*",
-              Authorization: `Bearer ${leetify_access_token}`,
-            },
-          };
-
           const res_alternative = await fetch(
             `https://api.leetify.com/api/mini-profiles/${steam_64_id}`,
-            options
+            leetify_get_options
           );
 
           if (res_alternative.ok) {
@@ -246,17 +228,9 @@
     match_data;
     try {
       let steam_64_ids = [];
-      let options = {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
-        },
-      };
-
       const res_match = await fetch(
         `https://open.faceit.com/data/v4/matches/${match_id}`,
-        options
+        faceit_get_options
       );
       if (res_match.ok) {
         const res_match_body = await res_match.json();
@@ -272,15 +246,9 @@
         let all_games = [];
         for (let id of steam_64_ids) {
           let leetify_id;
-          options = {
-            method: "POST",
-            headers: {
-              Accept: "application/json, text/plain, */*",
-              Authorization: `Bearer ${leetify_access_token}`,
-              "Content-Type": "application/json",
-            },
-            body: `{"searchTerm":"${id}"}`,
-          };
+
+          let options = leetify_post_options;
+          options.body = `{"searchTerm":"${id}"}`;
 
           const res_search = await fetch(
             "https://api.leetify.com/api/user/search",
@@ -291,17 +259,9 @@
             const res_search_body = await res_search.json();
             if (res_search_body.length > 0) {
               leetify_id = res_search_body[0].userId;
-              let options = {
-                method: "GET",
-                headers: {
-                  Accept: "application/json, text/plain, */*",
-                  Authorization: `Bearer ${leetify_access_token}`,
-                },
-              };
-
               const res_history = await fetch(
                 `https://api.leetify.com/api/games/history?dataSources=faceit&periods=%7B%22currentPeriod%22%3A%7B%22startDate%22%3A%2201.01.2015%22,%22endDate%22%3A%2201.01.3000%22%7D,%22previousPeriod%22%3A%7B%22startDate%22%3A%2201.10.2014%22,%22endDate%22%3A%2224.12.2014%22%7D%7D&spectatingId=${leetify_id}`,
-                options
+                leetify_get_options
               );
               if (res_history.ok) {
                 const res_history_body = await res_history.json();
@@ -313,14 +273,8 @@
         if (all_games.length > 0) {
           for (let game of all_games) {
             if (game.faceitMatchId == match_id) {
-              let options = {
-                method: "GET",
-                headers: {
-                  Accept: "application/json",
-                  Authorization: `Bearer ${leetify_access_token}`,
-                  lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
-                },
-              };
+              let options = leetify_get_options;
+              options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
 
               const res_leetify_match = await fetch(
                 `https://api.leetify.com/api/games/${game.id}`,

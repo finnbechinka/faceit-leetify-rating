@@ -20,34 +20,6 @@
   "use strict";
   await get_leetify_at();
   const leetify_access_token = await GM.getValue("leetify_at");
-  const leetify_post_options = {
-    method: "POST",
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      Authorization: `Bearer ${leetify_access_token}`,
-      "Content-Type": "application/json",
-    },
-  };
-  const leetify_get_options = {
-    method: "GET",
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      Authorization: `Bearer ${leetify_access_token}`,
-    },
-  };
-  const faceit_get_options = {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-      Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
-    },
-  };
-  let my_elements = [];
-  let match_data;
-  let ratings;
-  let old_url;
-  let last_username;
-  let last_match_id;
 
   async function get_leetify_at() {
     if (!(await GM.getValue("leetify_at"))) {
@@ -84,88 +56,203 @@
       });
   }
 
-  async function get_leetify_rating(username) {
-    let leetify_rating = "NOT FOUND";
-    let hltv_rating = "NOT FOUND";
-    let games = [];
-    let steam_64_id;
-    let leetify_user_id;
-    try {
-      const res_player = await fetch(
-        `https://open.faceit.com/data/v4/players?nickname=${username}`,
-        faceit_get_options
-      );
-      if (res_player.ok) {
-        const res_player_body = await res_player.json();
-        steam_64_id = res_player_body.games.csgo.game_player_id;
-      }
+  const leetify_post_options = {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      Authorization: `Bearer ${leetify_access_token}`,
+      "Content-Type": "application/json",
+    },
+  };
+  const leetify_get_options = {
+    method: "GET",
+    headers: {
+      Accept: "application/json, text/plain, */*",
+      Authorization: `Bearer ${leetify_access_token}`,
+    },
+  };
+  const faceit_get_options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      Authorization: "Bearer 976016be-48fb-443e-a4dc-b032c37dc27d",
+    },
+  };
+  let my_elements = [];
+  let match_data;
+  let old_url;
 
-      if (steam_64_id) {
-        let options = leetify_post_options;
-        options.body = `{"searchTerm":"${steam_64_id}"}`;
-
-        const res_search = await fetch(
-          "https://api.leetify.com/api/user/search",
-          leetify_post_options
-        );
-
-        if (res_search.ok) {
-          const res_search_body = await res_search.json();
-          if (res_search_body.length > 0) {
-            leetify_user_id = res_search_body[0].userId;
-          }
-        }
-
-        if (leetify_user_id) {
-          const res_general_data = await fetch(
-            `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
-            leetify_get_options
+  const data = {
+    leetify_rating: "NOT FOUND",
+    hltv_rating: "NOT FOUND",
+    games: [],
+    last_username: undefined,
+    match_data: undefined,
+    last_match_id: undefined,
+    get_leetify_rating: async (username) => {
+      if (username == data.last_username) {
+        return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+      } else {
+        data.last_username = username;
+        data.leetify_rating = "NOT FOUND";
+        data.hltv_rating = "NOT FOUND";
+        data.games = [];
+        let steam_64_id;
+        let leetify_user_id;
+        try {
+          const res_player = await fetch(
+            `https://open.faceit.com/data/v4/players?nickname=${username}`,
+            faceit_get_options
           );
-
-          if (res_general_data.ok) {
-            const res_general_data_body = await res_general_data.json();
-            leetify_rating = (
-              res_general_data_body.generalData.current.gamesTotals.leetifyRating * 100
-            ).toFixed(2);
-            hltv_rating = res_general_data_body.generalData.current.gamesTotals.hltvRating;
-            games = res_general_data_body.generalData.current.games;
+          if (res_player.ok) {
+            const res_player_body = await res_player.json();
+            steam_64_id = res_player_body.games.csgo.game_player_id;
           }
 
-          if (leetify_rating == 0 && hltv_rating == 0) {
-            games = [];
-            const res_general_data_alt = await fetch(
-              `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
-              leetify_get_options
+          if (steam_64_id) {
+            let options = leetify_post_options;
+            options.body = `{"searchTerm":"${steam_64_id}"}`;
+
+            const res_search = await fetch(
+              "https://api.leetify.com/api/user/search",
+              leetify_post_options
             );
 
-            if (res_general_data.ok) {
-              const res_general_data_alt_body = await res_general_data_alt.json();
-              leetify_rating = (
-                res_general_data_alt_body.generalData.current.gamesTotals.leetifyRating * 100
-              ).toFixed(2);
-              hltv_rating = res_general_data_alt_body.generalData.current.gamesTotals.hltvRating;
+            if (res_search.ok) {
+              const res_search_body = await res_search.json();
+              if (res_search_body.length > 0) {
+                leetify_user_id = res_search_body[0].userId;
+              }
+            }
+
+            if (leetify_user_id) {
+              const res_general_data = await fetch(
+                `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
+                leetify_get_options
+              );
+
+              if (res_general_data.ok) {
+                const res_general_data_body = await res_general_data.json();
+                data.leetify_rating = (
+                  res_general_data_body.generalData.current.gamesTotals.leetifyRating * 100
+                ).toFixed(2);
+                data.hltv_rating = res_general_data_body.generalData.current.gamesTotals.hltvRating;
+                data.games = res_general_data_body.generalData.current.games;
+              }
+
+              if (data.leetify_rating == 0 && data.hltv_rating == 0) {
+                data.games = [];
+                const res_general_data_alt = await fetch(
+                  `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+                  leetify_get_options
+                );
+
+                if (res_general_data.ok) {
+                  const res_general_data_alt_body = await res_general_data_alt.json();
+                  data.leetify_rating = (
+                    res_general_data_alt_body.generalData.current.gamesTotals.leetifyRating * 100
+                  ).toFixed(2);
+                  data.hltv_rating =
+                    res_general_data_alt_body.generalData.current.gamesTotals.hltvRating;
+                }
+              }
+            } else {
+              const res_alternative = await fetch(
+                `https://api.leetify.com/api/mini-profiles/${steam_64_id}`,
+                leetify_get_options
+              );
+
+              if (res_alternative.ok) {
+                const res_alternative_body = await res_alternative.json();
+
+                data.leetify_rating = (res_alternative_body.ratings.leetify * 100).toFixed(2);
+              }
             }
           }
-        } else {
-          const res_alternative = await fetch(
-            `https://api.leetify.com/api/mini-profiles/${steam_64_id}`,
-            leetify_get_options
-          );
-
-          if (res_alternative.ok) {
-            const res_alternative_body = await res_alternative.json();
-
-            leetify_rating = (res_alternative_body.ratings.leetify * 100).toFixed(2);
-          }
+          return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+        } catch (error) {
+          console.error(error);
         }
+        return undefined;
       }
-      return { leetify: leetify_rating, hltv: hltv_rating, games: games };
-    } catch (error) {
-      console.error(error);
-    }
-  }
+    },
+    get_match_data: async (match_id) => {
+      if (match_id == last_match_id) {
+        return data.match_data;
+      } else {
+        try {
+          let steam_64_ids = [];
+          const res_match = await fetch(
+            `https://open.faceit.com/data/v4/matches/${match_id}`,
+            faceit_get_options
+          );
+          if (res_match.ok) {
+            const res_match_body = await res_match.json();
+
+            for (let player of res_match_body.teams.faction1.roster) {
+              steam_64_ids.push(player.game_player_id);
+            }
+            for (let player of res_match_body.teams.faction2.roster) {
+              steam_64_ids.push(player.game_player_id);
+            }
+          }
+          if (steam_64_ids) {
+            let all_games = [];
+            for (let id of steam_64_ids) {
+              let leetify_id;
+
+              let options = leetify_post_options;
+              options.body = `{"searchTerm":"${id}"}`;
+
+              const res_search = await fetch("https://api.leetify.com/api/user/search", options);
+
+              if (res_search.ok) {
+                const res_search_body = await res_search.json();
+                if (res_search_body.length > 0) {
+                  leetify_id = res_search_body[0].userId;
+                  const res_history = await fetch(
+                    `https://api.leetify.com/api/games/history?dataSources=faceit&periods=%7B%22currentPeriod%22%3A%7B%22startDate%22%3A%2201.01.2015%22,%22endDate%22%3A%2201.01.3000%22%7D,%22previousPeriod%22%3A%7B%22startDate%22%3A%2201.10.2014%22,%22endDate%22%3A%2224.12.2014%22%7D%7D&spectatingId=${leetify_id}`,
+                    leetify_get_options
+                  );
+                  if (res_history.ok) {
+                    const res_history_body = await res_history.json();
+                    all_games = all_games.concat(res_history_body.games);
+                  }
+                }
+              }
+            }
+            if (all_games.length > 0) {
+              for (let game of all_games) {
+                if (game.faceitMatchId == match_id) {
+                  let options = leetify_get_options;
+                  options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
+
+                  const res_leetify_match = await fetch(
+                    `https://api.leetify.com/api/games/${game.id}`,
+                    options
+                  );
+                  if (res_leetify_match.ok) {
+                    const res_leetify_match_body = await res_leetify_match.json();
+                    data.match_data = res_leetify_match_body;
+                    return data.match_data;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error(error);
+        }
+        return undefined;
+      }
+    },
+  };
 
   function add_match_elements(match_data) {
+    if (!match_data) {
+      return;
+    }
     try {
       if (my_elements.length != 0) {
         remove_my_elements();
@@ -206,72 +293,6 @@
           }
         });
       });
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async function get_match_data(match_id) {
-    try {
-      let steam_64_ids = [];
-      const res_match = await fetch(
-        `https://open.faceit.com/data/v4/matches/${match_id}`,
-        faceit_get_options
-      );
-      if (res_match.ok) {
-        const res_match_body = await res_match.json();
-
-        for (let player of res_match_body.teams.faction1.roster) {
-          steam_64_ids.push(player.game_player_id);
-        }
-        for (let player of res_match_body.teams.faction2.roster) {
-          steam_64_ids.push(player.game_player_id);
-        }
-      }
-      if (steam_64_ids) {
-        let all_games = [];
-        for (let id of steam_64_ids) {
-          let leetify_id;
-
-          let options = leetify_post_options;
-          options.body = `{"searchTerm":"${id}"}`;
-
-          const res_search = await fetch("https://api.leetify.com/api/user/search", options);
-
-          if (res_search.ok) {
-            const res_search_body = await res_search.json();
-            if (res_search_body.length > 0) {
-              leetify_id = res_search_body[0].userId;
-              const res_history = await fetch(
-                `https://api.leetify.com/api/games/history?dataSources=faceit&periods=%7B%22currentPeriod%22%3A%7B%22startDate%22%3A%2201.01.2015%22,%22endDate%22%3A%2201.01.3000%22%7D,%22previousPeriod%22%3A%7B%22startDate%22%3A%2201.10.2014%22,%22endDate%22%3A%2224.12.2014%22%7D%7D&spectatingId=${leetify_id}`,
-                leetify_get_options
-              );
-              if (res_history.ok) {
-                const res_history_body = await res_history.json();
-                all_games = all_games.concat(res_history_body.games);
-              }
-            }
-          }
-        }
-        if (all_games.length > 0) {
-          for (let game of all_games) {
-            if (game.faceitMatchId == match_id) {
-              let options = leetify_get_options;
-              options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
-
-              const res_leetify_match = await fetch(
-                `https://api.leetify.com/api/games/${game.id}`,
-                options
-              );
-              if (res_leetify_match.ok) {
-                const res_leetify_match_body = await res_leetify_match.json();
-                return res_leetify_match_body;
-              }
-              break;
-            }
-          }
-        }
-      }
     } catch (error) {
       console.error(error);
     }
@@ -372,6 +393,9 @@
   }
 
   function add_elements(ratings) {
+    if (!ratings) {
+      return;
+    }
     try {
       if (my_elements.length != 0) {
         remove_my_elements();
@@ -413,23 +437,13 @@
       if (is_csgo_stats_page) {
         index = url_segments.indexOf(e) + 1;
         let username = url_segments[index];
-        if (username != last_username) {
-          last_username = username;
-          ratings = await get_leetify_rating(username);
-        }
-        if (ratings) {
-          add_elements(ratings);
-        }
+        const ratings = await data.get_leetify_rating(username);
+        add_elements(ratings);
       }
       if (is_match_scoreboard_page) {
         const match_id = url_segments[url_segments.length - 2];
-        if (last_match_id != match_id) {
-          last_match_id = match_id;
-          match_data = await get_match_data(match_id);
-        }
-        if (match_data) {
-          add_match_elements(match_data);
-        }
+        const match_data = await data.get_match_data(match_id);
+        add_match_elements(match_data);
       }
     }
   }

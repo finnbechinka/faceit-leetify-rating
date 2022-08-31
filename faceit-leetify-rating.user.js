@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.4.1
+// @version      1.5.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -42,7 +42,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "1.4.1",
+        version: "1.5.0",
         app: "faceit-leetify-rating",
       }),
     })
@@ -179,6 +179,7 @@
       if (match_id == data.last_match_id) {
         return data.match_data;
       } else {
+        data.last_match_id = match_id;
         try {
           let steam_64_ids = [];
           const res_match = await fetch(
@@ -196,7 +197,6 @@
             }
           }
           if (steam_64_ids) {
-            let all_games = [];
             for (let id of steam_64_ids) {
               let leetify_id;
 
@@ -215,27 +215,25 @@
                   );
                   if (res_history.ok) {
                     const res_history_body = await res_history.json();
-                    all_games = all_games.concat(res_history_body.games);
-                  }
-                }
-              }
-            }
-            if (all_games.length > 0) {
-              for (let game of all_games) {
-                if (game.faceitMatchId == match_id) {
-                  let options = leetify_get_options;
-                  options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
+                    if (res_history_body.games.length > 0) {
+                      for (let game of res_history_body.games) {
+                        if (game.faceitMatchId == match_id) {
+                          let options = leetify_get_options;
+                          options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
 
-                  const res_leetify_match = await fetch(
-                    `https://api.leetify.com/api/games/${game.id}`,
-                    options
-                  );
-                  if (res_leetify_match.ok) {
-                    const res_leetify_match_body = await res_leetify_match.json();
-                    data.match_data = res_leetify_match_body;
-                    return data.match_data;
+                          const res_leetify_match = await fetch(
+                            `https://api.leetify.com/api/games/${game.id}`,
+                            options
+                          );
+                          if (res_leetify_match.ok) {
+                            const res_leetify_match_body = await res_leetify_match.json();
+                            data.match_data = res_leetify_match_body;
+                            return data.match_data;
+                          }
+                        }
+                      }
+                    }
                   }
-                  break;
                 }
               }
             }

@@ -52,14 +52,8 @@
   async function get_leetify_at() {
     if (!(await GM.getValue("leetify_at"))) {
       if (window.location.hostname.split(".").includes("leetify")) {
-        await GM.setValue(
-          "leetify_at",
-          window.localStorage.getItem("access_token")
-        );
-        if (
-          window.location.href ==
-          "https://beta.leetify.com/faceit-leetify-rating"
-        ) {
+        await GM.setValue("leetify_at", window.localStorage.getItem("access_token"));
+        if (window.location.href == "https://beta.leetify.com/faceit-leetify-rating") {
           window.close();
         }
       } else {
@@ -131,11 +125,9 @@
           if (res_general_data.ok) {
             const res_general_data_body = await res_general_data.json();
             leetify_rating = (
-              res_general_data_body.generalData.current.gamesTotals
-                .leetifyRating * 100
+              res_general_data_body.generalData.current.gamesTotals.leetifyRating * 100
             ).toFixed(2);
-            hltv_rating =
-              res_general_data_body.generalData.current.gamesTotals.hltvRating;
+            hltv_rating = res_general_data_body.generalData.current.gamesTotals.hltvRating;
             games = res_general_data_body.generalData.current.games;
           }
 
@@ -147,15 +139,11 @@
             );
 
             if (res_general_data.ok) {
-              const res_general_data_alt_body =
-                await res_general_data_alt.json();
+              const res_general_data_alt_body = await res_general_data_alt.json();
               leetify_rating = (
-                res_general_data_alt_body.generalData.current.gamesTotals
-                  .leetifyRating * 100
+                res_general_data_alt_body.generalData.current.gamesTotals.leetifyRating * 100
               ).toFixed(2);
-              hltv_rating =
-                res_general_data_alt_body.generalData.current.gamesTotals
-                  .hltvRating;
+              hltv_rating = res_general_data_alt_body.generalData.current.gamesTotals.hltvRating;
             }
           }
         } else {
@@ -167,9 +155,7 @@
           if (res_alternative.ok) {
             const res_alternative_body = await res_alternative.json();
 
-            leetify_rating = (
-              res_alternative_body.ratings.leetify * 100
-            ).toFixed(2);
+            leetify_rating = (res_alternative_body.ratings.leetify * 100).toFixed(2);
           }
         }
       }
@@ -200,9 +186,7 @@
 
             const players = td.parentNode.parentNode.nextSibling;
             for (let player of players.childNodes) {
-              const name =
-                player.firstChild.firstChild.firstChild.lastChild.lastChild
-                  .data;
+              const name = player.firstChild.firstChild.firstChild.lastChild.lastChild.data;
               const my_td2 = player.firstChild.nextSibling.cloneNode(true);
               for (let stats of match_data.playerStats) {
                 if (stats.name == name) {
@@ -252,10 +236,7 @@
           let options = leetify_post_options;
           options.body = `{"searchTerm":"${id}"}`;
 
-          const res_search = await fetch(
-            "https://api.leetify.com/api/user/search",
-            options
-          );
+          const res_search = await fetch("https://api.leetify.com/api/user/search", options);
 
           if (res_search.ok) {
             const res_search_body = await res_search.json();
@@ -331,14 +312,10 @@
               my_tiles.removeChild(my_tiles.lastChild);
             }
             if (my_tiles.firstChild.firstChild.firstChild) {
-              my_tiles.firstChild.firstChild.firstChild.firstChild.data =
-                ratings.leetify;
-              my_tiles.firstChild.lastChild.firstChild.firstChild.data =
-                "LEETIFY RATING";
-              my_tiles.lastChild.firstChild.firstChild.firstChild.data =
-                ratings.hltv;
-              my_tiles.lastChild.lastChild.firstChild.firstChild.data =
-                "HLTV RATING";
+              my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
+              my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
+              my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
+              my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
 
               const my_divider = divider.cloneNode(true);
 
@@ -348,33 +325,19 @@
 
               divider.parentNode.insertBefore(my_title, divider.nextSibling);
               my_title.parentNode.insertBefore(my_tiles, my_title.nextSibling);
-              my_tiles.parentNode.insertBefore(
-                my_divider,
-                my_tiles.nextSibling
-              );
+              my_tiles.parentNode.insertBefore(my_divider, my_tiles.nextSibling);
             }
           }
 
-          if (
-            e.lastChild &&
-            e.lastChild.data == "Match History" &&
-            ratings.games.length == 30
-          ) {
+          if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
             const table = e.parentNode.nextSibling.firstChild;
             if (table && table.childNodes.length > 0) {
               let games_index = 29;
 
-              for (
-                let i = 1;
-                i < table.childNodes.length && games_index >= 0;
-                i++
-              ) {
-                const map =
-                  table.childNodes[i].childNodes[4].firstChild.lastChild.data;
+              for (let i = 1; i < table.childNodes.length && games_index >= 0; i++) {
+                const map = table.childNodes[i].childNodes[4].firstChild.lastChild.data;
                 if (map == ratings.games[games_index].mapName) {
-                  const rating = (
-                    ratings.games[games_index].leetifyRating * 100
-                  ).toFixed(2);
+                  const rating = (ratings.games[games_index].leetifyRating * 100).toFixed(2);
                   const div = document.createElement("div");
                   if (rating > 2) {
                     div.style.color = "#32d35a";
@@ -385,51 +348,32 @@
                   }
                   div.style.fontWeight = "normal";
                   div.style.textTransform = "none";
-                  const text = document.createTextNode(
-                    `Leetify Rating: ${rating}`
-                  );
+                  const text = document.createTextNode(`Leetify Rating: ${rating}`);
                   div.appendChild(text);
 
-                  table.childNodes[
-                    i
-                  ].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
+                  table.childNodes[i].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
                     div,
-                    table.childNodes[i].childNodes[2].lastChild.lastChild
-                      .nextSibling
+                    table.childNodes[i].childNodes[2].lastChild.lastChild.nextSibling
                   );
                   if (
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild
-                      .data.length == 29 &&
+                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 29 &&
                       rating.length == 4) ||
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild
-                      .data.length == 30 &&
+                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
                       rating.length == 5)
                   ) {
-                    const str =
-                      table.childNodes[i].childNodes[2].firstChild.firstChild
-                        .data;
-                    const new_str =
-                      str.substr(0, 3) + str.substr(str.length - 6, 6);
-                    table.childNodes[
-                      i
-                    ].childNodes[2].firstChild.firstChild.data = new_str;
+                    const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
+                    const new_str = str.substr(0, 3) + str.substr(str.length - 6, 6);
+                    table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
                   }
                   if (
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild
-                      .data.length == 30 &&
+                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
                       rating.length == 4) ||
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild
-                      .data.length == 31 &&
+                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 31 &&
                       rating.length == 5)
                   ) {
-                    const str =
-                      table.childNodes[i].childNodes[2].firstChild.firstChild
-                        .data;
-                    const new_str =
-                      str.substr(0, 4) + str.substr(str.length - 6, 6);
-                    table.childNodes[
-                      i
-                    ].childNodes[2].firstChild.firstChild.data = new_str;
+                    const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
+                    const new_str = str.substr(0, 4) + str.substr(str.length - 6, 6);
+                    table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
                   }
 
                   games_index--;

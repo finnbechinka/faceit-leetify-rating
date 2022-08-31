@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.2.1
+// @version      1.3.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -70,7 +70,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "1.2.1",
+        version: "1.3.0",
         app: "faceit-leetify-rating",
       }),
     })
@@ -287,6 +287,90 @@
     my_elements = [];
   }
 
+  function add_match_history_ratings(e, ratings) {
+    const table = e.parentNode.nextSibling.firstChild;
+    if (table && table.childNodes.length > 0) {
+      let games_index = 29;
+
+      for (let i = 1; i < table.childNodes.length && games_index >= 0; i++) {
+        const map = table.childNodes[i].childNodes[4].firstChild.lastChild.data;
+        if (map == ratings.games[games_index].mapName) {
+          const rating = (ratings.games[games_index].leetifyRating * 100).toFixed(2);
+          const div = document.createElement("div");
+          if (rating > 2) {
+            div.style.color = "#32d35a";
+          } else if (rating < -2) {
+            div.style.color = "#ff002b";
+          } else {
+            div.style.color = "rgb(255, 255, 255)";
+          }
+          div.style.fontWeight = "normal";
+          div.style.textTransform = "none";
+          const text = document.createTextNode(`Leetify Rating: ${rating}`);
+          div.appendChild(text);
+
+          table.childNodes[i].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
+            div,
+            table.childNodes[i].childNodes[2].lastChild.lastChild.nextSibling
+          );
+          if (
+            (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 29 &&
+              rating.length == 4) ||
+            (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
+              rating.length == 5)
+          ) {
+            const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
+            const new_str = str.substr(0, 3) + str.substr(str.length - 6, 6);
+            table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
+          }
+          if (
+            (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
+              rating.length == 4) ||
+            (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 31 &&
+              rating.length == 5)
+          ) {
+            const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
+            const new_str = str.substr(0, 4) + str.substr(str.length - 6, 6);
+            table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
+          }
+
+          games_index--;
+          my_elements.push(div);
+        }
+      }
+    }
+  }
+
+  function add_profile_ratings(e, ratings) {
+    const title = e.parentNode;
+    const tiles = title.nextSibling;
+    const divider = tiles.nextSibling;
+
+    const my_title = title.cloneNode(true);
+    my_title.firstChild.firstChild.data = "RATINGS (LAST 30 MATCHES)";
+
+    const my_tiles = tiles.cloneNode(true);
+    while (my_tiles.childElementCount > 2) {
+      my_tiles.removeChild(my_tiles.lastChild);
+    }
+    if (my_tiles.firstChild.firstChild.firstChild) {
+      my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
+      my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
+      my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
+      my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
+
+      const my_divider = divider.cloneNode(true);
+
+      my_elements.push(my_title);
+      my_elements.push(my_tiles);
+      my_elements.push(my_divider);
+
+      divider.parentNode.insertBefore(my_title, divider.nextSibling);
+      my_title.parentNode.insertBefore(my_tiles, my_title.nextSibling);
+      my_tiles.parentNode.insertBefore(my_divider, my_tiles.nextSibling);
+    }
+  }
+
   function add_elements(ratings) {
     try {
       if (my_elements.length != 0) {
@@ -300,87 +384,11 @@
         let elements = s.querySelectorAll("span");
         elements.forEach((e) => {
           if (e.lastChild && e.lastChild.data == "Main Statistics") {
-            const title = e.parentNode;
-            const tiles = title.nextSibling;
-            const divider = tiles.nextSibling;
-
-            const my_title = title.cloneNode(true);
-            my_title.firstChild.firstChild.data = "RATINGS (LAST 30 MATCHES)";
-
-            const my_tiles = tiles.cloneNode(true);
-            while (my_tiles.childElementCount > 2) {
-              my_tiles.removeChild(my_tiles.lastChild);
-            }
-            if (my_tiles.firstChild.firstChild.firstChild) {
-              my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
-              my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
-              my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
-              my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
-
-              const my_divider = divider.cloneNode(true);
-
-              my_elements.push(my_title);
-              my_elements.push(my_tiles);
-              my_elements.push(my_divider);
-
-              divider.parentNode.insertBefore(my_title, divider.nextSibling);
-              my_title.parentNode.insertBefore(my_tiles, my_title.nextSibling);
-              my_tiles.parentNode.insertBefore(my_divider, my_tiles.nextSibling);
-            }
+            add_profile_ratings(e, ratings);
           }
 
           if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
-            const table = e.parentNode.nextSibling.firstChild;
-            if (table && table.childNodes.length > 0) {
-              let games_index = 29;
-
-              for (let i = 1; i < table.childNodes.length && games_index >= 0; i++) {
-                const map = table.childNodes[i].childNodes[4].firstChild.lastChild.data;
-                if (map == ratings.games[games_index].mapName) {
-                  const rating = (ratings.games[games_index].leetifyRating * 100).toFixed(2);
-                  const div = document.createElement("div");
-                  if (rating > 2) {
-                    div.style.color = "#32d35a";
-                  } else if (rating < -2) {
-                    div.style.color = "#ff002b";
-                  } else {
-                    div.style.color = "rgb(255, 255, 255)";
-                  }
-                  div.style.fontWeight = "normal";
-                  div.style.textTransform = "none";
-                  const text = document.createTextNode(`Leetify Rating: ${rating}`);
-                  div.appendChild(text);
-
-                  table.childNodes[i].childNodes[2].lastChild.lastChild.parentNode.insertBefore(
-                    div,
-                    table.childNodes[i].childNodes[2].lastChild.lastChild.nextSibling
-                  );
-                  if (
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 29 &&
-                      rating.length == 4) ||
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
-                      rating.length == 5)
-                  ) {
-                    const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
-                    const new_str = str.substr(0, 3) + str.substr(str.length - 6, 6);
-                    table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
-                  }
-                  if (
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 30 &&
-                      rating.length == 4) ||
-                    (table.childNodes[i].childNodes[2].firstChild.firstChild.data.length == 31 &&
-                      rating.length == 5)
-                  ) {
-                    const str = table.childNodes[i].childNodes[2].firstChild.firstChild.data;
-                    const new_str = str.substr(0, 4) + str.substr(str.length - 6, 6);
-                    table.childNodes[i].childNodes[2].firstChild.firstChild.data = new_str;
-                  }
-
-                  games_index--;
-                  my_elements.push(div);
-                }
-              }
-            }
+            add_match_history_ratings(e, ratings);
           }
         });
       });

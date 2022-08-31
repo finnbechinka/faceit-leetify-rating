@@ -131,7 +131,7 @@
             games = res_general_data_body.generalData.current.games;
           }
 
-          if (leetify_rating == 0.0 && hltv_rating == 0) {
+          if (leetify_rating == 0 && hltv_rating == 0) {
             games = [];
             const res_general_data_alt = await fetch(
               `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
@@ -290,7 +290,7 @@
   function add_match_history_ratings(e, ratings) {
     const table = e.parentNode.nextSibling.firstChild;
     if (table && table.childNodes.length > 0) {
-      let games_index = 29;
+      let games_index = ratings.games.length - 1;
 
       for (let i = 1; i < table.childNodes.length && games_index >= 0; i++) {
         const map = table.childNodes[i].childNodes[4].firstChild.lastChild.data;

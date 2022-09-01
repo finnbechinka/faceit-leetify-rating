@@ -18,6 +18,13 @@
         }
     ],
 
+    "permissions": [
+        "*://*.faceit.com/*",
+        "*://*.leetify.com/*",
+        "*://localhost/*",
+        "webRequest"
+    ],
+
     "icons": {
         "32": "icons/icon_32.png"
     },

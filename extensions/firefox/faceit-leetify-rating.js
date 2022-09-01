@@ -1,38 +1,15 @@
 (async function () {
   "use strict";
-  let leetify_access_token =
+  const leetify_access_token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
-  // await get_leetify_at();
-
-  async function get_leetify_at() {
-    let item = await browser.storage.local.get("leetify_at");
-    if (!item.token) {
-      if (window.location.hostname.split(".").includes("leetify")) {
-        await browser.storage.local.set({
-          leetify_at: { token: window.localStorage.getItem("access_token") },
-        });
-        if (window.location.href == "https://beta.leetify.com/faceit-leetify-rating") {
-          window.close();
-        }
-      } else {
-        window.open("https://beta.leetify.com/faceit-leetify-rating");
-        setTimeout(() => {
-          window.location.reload();
-        }, 250);
-      }
-    }
-    if (await browser.storage.local.get("leetify_at")) {
-      let item = await browser.storage.local.get("leetify_at");
-      leetify_access_token = item.token;
-    }
-  }
+  const lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
 
   const leetify_post_options = {
     method: "POST",
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
-      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+      lvid: lvid,
       "Content-Type": "application/json",
     },
   };
@@ -41,7 +18,7 @@
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
-      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+      lvid: lvid,
     },
   };
   const faceit_get_options = {

@@ -18,8 +18,9 @@
 
 (async function () {
   "use strict";
+  let leetify_access_token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
   await get_leetify_at();
-  const leetify_access_token = await GM.getValue("leetify_at");
 
   async function get_leetify_at() {
     if (!(await GM.getValue("leetify_at"))) {
@@ -30,7 +31,13 @@
         }
       } else {
         window.open("https://beta.leetify.com/faceit-leetify-rating");
+        setTimeout(() => {
+          window.location.reload();
+        }, 250);
       }
+    }
+    if (await GM.getValue("leetify_at")) {
+      leetify_access_token = await GM.getValue("leetify_at");
     }
   }
 
@@ -61,6 +68,7 @@
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
+      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
       "Content-Type": "application/json",
     },
   };
@@ -69,6 +77,7 @@
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
+      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
     },
   };
   const faceit_get_options = {
@@ -92,13 +101,13 @@
       if (username == data.last_username) {
         return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
       } else {
-        data.last_username = username;
-        data.leetify_rating = "NOT FOUND";
-        data.hltv_rating = "NOT FOUND";
-        data.games = [];
-        let steam_64_id;
-        let leetify_user_id;
         try {
+          data.last_username = username;
+          data.leetify_rating = "NOT FOUND";
+          data.hltv_rating = "NOT FOUND";
+          data.games = [];
+          let steam_64_id;
+          let leetify_user_id;
           const res_player = await fetch(
             `https://open.faceit.com/data/v4/players?nickname=${username}`,
             faceit_get_options
@@ -179,8 +188,8 @@
       if (match_id == data.last_match_id) {
         return data.match_data;
       } else {
-        data.last_match_id = match_id;
         try {
+          data.last_match_id = match_id;
           let steam_64_ids = [];
           const res_match = await fetch(
             `https://open.faceit.com/data/v4/matches/${match_id}`,
@@ -219,7 +228,6 @@
                       for (let game of res_history_body.games) {
                         if (game.faceitMatchId == match_id) {
                           let options = leetify_get_options;
-                          options.headers.lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
 
                           const res_leetify_match = await fetch(
                             `https://api.leetify.com/api/games/${game.id}`,
@@ -457,7 +465,6 @@
 
     if (current_url != old_url) {
       old_url = current_url;
-      match_data = undefined;
       remove_my_elements();
     }
   };

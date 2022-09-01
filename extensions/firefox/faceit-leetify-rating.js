@@ -2,13 +2,15 @@
   "use strict";
   let leetify_access_token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
-  await get_leetify_at();
+  // await get_leetify_at();
 
   async function get_leetify_at() {
-    if (!(await browser.storage.local.get("leetify_at"))) {
+    let item = await browser.storage.local.get("leetify_at");
+    if (!item.token) {
       if (window.location.hostname.split(".").includes("leetify")) {
-        const leetify_at = window.localStorage.getItem("access_token");
-        await browser.storage.local.set({ leetify_at });
+        await browser.storage.local.set({
+          leetify_at: { token: window.localStorage.getItem("access_token") },
+        });
         if (window.location.href == "https://beta.leetify.com/faceit-leetify-rating") {
           window.close();
         }
@@ -20,7 +22,8 @@
       }
     }
     if (await browser.storage.local.get("leetify_at")) {
-      leetify_access_token = await browser.storage.local.get("leetify_at");
+      let item = await browser.storage.local.get("leetify_at");
+      leetify_access_token = item.token;
     }
   }
 
@@ -433,16 +436,15 @@
   // Create an observer instance linked to the callback function
   const observer = new MutationObserver(callback);
 
-  window.onload = () => {
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-    let update_interval = setInterval(async () => {
-      let current_url = window.location.href;
-      await update(current_url);
-    }, 1000);
+  // Start observing the target node for configured mutations
+  observer.observe(targetNode, config);
 
-    // setTimeout(() => {
-    //   clearInterval(update_interval);
-    // }, 30000);
-  };
+  let update_interval = setInterval(async () => {
+    let current_url = window.location.href;
+    await update(current_url);
+  }, 1000);
+
+  // setTimeout(() => {
+  //   clearInterval(update_interval);
+  // }, 30000);
 })();

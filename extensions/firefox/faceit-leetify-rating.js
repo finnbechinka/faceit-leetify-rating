@@ -1,31 +1,16 @@
-// ==UserScript==
-// @name         FACEIT leetify rating
-// @namespace    https://www.faceit.com/
-// @version      1.5.0
-// @description  A small script that displays leetify ratings on FACEIT
-// @author       shaker
-// @match        *://*.faceit.com/*
-// @match        *://*.leetify.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=faceit.com
-// @grant        GM.getValue
-// @grant        GM.setValue
-// @run-at       document-end
-// @homepageURL  https://github.com/shakerrrr/faceit-leetify-rating
-// @updateURL    https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
-// @downloadURL  https://github.com/shakerrrr/faceit-leetify-rating/raw/master/faceit-leetify-rating.user.js
-// @supportURL   https://github.com/shakerrrr/faceit-leetify-rating/issues
-// ==/UserScript==
-
 (async function () {
   "use strict";
   let leetify_access_token =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
-  await get_leetify_at();
+  // await get_leetify_at();
 
   async function get_leetify_at() {
-    if (!(await GM.getValue("leetify_at"))) {
+    let item = await browser.storage.local.get("leetify_at");
+    if (!item.token) {
       if (window.location.hostname.split(".").includes("leetify")) {
-        await GM.setValue("leetify_at", window.localStorage.getItem("access_token"));
+        await browser.storage.local.set({
+          leetify_at: { token: window.localStorage.getItem("access_token") },
+        });
         if (window.location.href == "https://beta.leetify.com/faceit-leetify-rating") {
           window.close();
         }
@@ -36,31 +21,10 @@
         }, 250);
       }
     }
-    if (await GM.getValue("leetify_at")) {
-      leetify_access_token = await GM.getValue("leetify_at");
+    if (await browser.storage.local.get("leetify_at")) {
+      let item = await browser.storage.local.get("leetify_at");
+      leetify_access_token = item.token;
     }
-  }
-
-  if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
-    fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        version: "1.5.0",
-        app: "faceit-leetify-rating",
-      }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          window.localStorage.setItem("faceit-leetify-rating-counted", "true");
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
   }
 
   const leetify_post_options = {
@@ -475,6 +439,7 @@
   window.onload = () => {
     // Start observing the target node for configured mutations
     observer.observe(targetNode, config);
+
     let update_interval = setInterval(async () => {
       let current_url = window.location.href;
       await update(current_url);

@@ -436,15 +436,17 @@
   // Create an observer instance linked to the callback function
   const observer = new MutationObserver(callback);
 
-  // Start observing the target node for configured mutations
-  observer.observe(targetNode, config);
+  window.onload = () => {
+    // Start observing the target node for configured mutations
+    observer.observe(targetNode, config);
 
-  let update_interval = setInterval(async () => {
-    let current_url = window.location.href;
-    await update(current_url);
-  }, 1000);
+    let update_interval = setInterval(async () => {
+      let current_url = window.location.href;
+      await update(current_url);
+    }, 1000);
 
-  // setTimeout(() => {
-  //   clearInterval(update_interval);
-  // }, 30000);
+    // setTimeout(() => {
+    //   clearInterval(update_interval);
+    // }, 30000);
+  };
 })();

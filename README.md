@@ -7,10 +7,10 @@ A small script that displays leetify ratings on FACEIT
   - This only works for players that have a Leetify account
   - Players who don't have a Leetify account, but who have played in matches that have been analyzed by Leetify, may have a Leetify rating displayed on their profile but no HLTV rating
   ![profile](images/profile.png)
-- Displays the players Leetify rating for a match in the match history
+- Displays the player's Leetify rating for a match in the match history
   - This only works for players that have a Leetify account
   ![history](images/history.png)
-- Displays each players Leetify rating on the match scoreboard
+- Displays each players' Leetify rating on the match scoreboard
   - This only works if at least one player in the match has a Leetify account and the match has been analyzed by Leetify
   ![match](images/match.png)
 

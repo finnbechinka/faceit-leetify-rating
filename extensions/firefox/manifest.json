@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "FACEIT Leetify rating",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "homepage_url": "https://github.com/shakerrrr/faceit-leetify-rating",
 
     "description": "A small script that displays leetify ratings on FACEIT.",
@@ -9,8 +9,7 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.faceit.com/*",
-                "*://*.leetify.com/*"
+                "*://*.faceit.com/*"
             ],
             "js": [
                 "faceit-leetify-rating.js"
@@ -21,7 +20,6 @@
     "permissions": [
         "*://*.faceit.com/*",
         "*://*.leetify.com/*",
-        "*://localhost/*",
         "webRequest"
     ],
 

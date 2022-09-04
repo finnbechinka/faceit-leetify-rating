@@ -34,18 +34,25 @@
   const data = {
     leetify_rating: "NOT FOUND",
     hltv_rating: "NOT FOUND",
+    adr: "NOT FOUND",
     games: [],
     last_username: undefined,
     match_data: undefined,
     last_match_id: undefined,
     get_leetify_rating: async (username) => {
       if (username == data.last_username) {
-        return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+        return {
+          leetify: data.leetify_rating,
+          hltv: data.hltv_rating,
+          adr: data.adr,
+          games: data.games,
+        };
       } else {
         try {
           data.last_username = username;
           data.leetify_rating = "NOT FOUND";
           data.hltv_rating = "NOT FOUND";
+          data.adr = "NOT FOUND";
           data.games = [];
           let steam_64_id;
           let leetify_user_id;
@@ -87,6 +94,7 @@
                 ).toFixed(2);
                 data.hltv_rating = res_general_data_body.generalData.current.gamesTotals.hltvRating;
                 data.games = res_general_data_body.generalData.current.games;
+                data.adr = Math.round(res_general_data_body.generalData.current.gamesTotals.adr);
               }
 
               if (data.leetify_rating == 0 && data.hltv_rating == 0) {
@@ -96,13 +104,16 @@
                   leetify_get_options
                 );
 
-                if (res_general_data.ok) {
+                if (res_general_data_alt.ok) {
                   const res_general_data_alt_body = await res_general_data_alt.json();
                   data.leetify_rating = (
                     res_general_data_alt_body.generalData.current.gamesTotals.leetifyRating * 100
                   ).toFixed(2);
                   data.hltv_rating =
                     res_general_data_alt_body.generalData.current.gamesTotals.hltvRating;
+                  data.adr = Math.round(
+                    res_general_data_alt_body.generalData.current.gamesTotals.adr
+                  );
                 }
               }
             } else {
@@ -118,7 +129,12 @@
               }
             }
           }
-          return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+          return {
+            leetify: data.leetify_rating,
+            hltv: data.hltv_rating,
+            adr: data.adr,
+            games: data.games,
+          };
         } catch (error) {
           console.error(error);
         }
@@ -317,14 +333,16 @@
     my_title.firstChild.firstChild.data = "RATINGS (LAST 30 MATCHES)";
 
     const my_tiles = tiles.cloneNode(true);
-    while (my_tiles.childElementCount > 2) {
+    while (my_tiles.childElementCount > 3) {
       my_tiles.removeChild(my_tiles.lastChild);
     }
     if (my_tiles.firstChild.firstChild.firstChild) {
-      my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
-      my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
-      my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
-      my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
+      my_tiles.children[0].firstChild.firstChild.firstChild.data = ratings.leetify;
+      my_tiles.children[0].lastChild.firstChild.firstChild.data = "LEETIFY RATING";
+      my_tiles.children[1].firstChild.firstChild.firstChild.data = ratings.hltv;
+      my_tiles.children[1].lastChild.firstChild.firstChild.data = "HLTV RATING";
+      my_tiles.children[2].firstChild.firstChild.firstChild.data = ratings.adr;
+      my_tiles.children[2].lastChild.firstChild.firstChild.data = "ADR";
 
       const my_divider = divider.cloneNode(true);
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.5.0
+// @version      1.6.0
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -18,29 +18,6 @@
 
 (async function () {
   "use strict";
-  let leetify_access_token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
-  await get_leetify_at();
-
-  async function get_leetify_at() {
-    if (!(await GM.getValue("leetify_at"))) {
-      if (window.location.hostname.split(".").includes("leetify")) {
-        await GM.setValue("leetify_at", window.localStorage.getItem("access_token"));
-        if (window.location.href == "https://beta.leetify.com/faceit-leetify-rating") {
-          window.close();
-        }
-      } else {
-        window.open("https://beta.leetify.com/faceit-leetify-rating");
-        setTimeout(() => {
-          window.location.reload();
-        }, 250);
-      }
-    }
-    if (await GM.getValue("leetify_at")) {
-      leetify_access_token = await GM.getValue("leetify_at");
-    }
-  }
-
   if (!window.localStorage.getItem("faceit-leetify-rating-counted")) {
     fetch("https://shaker-api.netlify.app/.netlify/functions/api", {
       method: "POST",
@@ -49,7 +26,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        version: "1.5.0",
+        version: "1.6.0",
         app: "faceit-leetify-rating",
       }),
     })
@@ -63,12 +40,16 @@
       });
   }
 
+  const leetify_access_token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkMjI2ZjA4Ny1mNjZjLTQ4M2MtYTMyMi1lMzE4NjEzMzVlMjMiLCJpYXQiOjE2NjE5OTIyMDZ9.N118a-3ZGb5nkgVo1ibgbbc2Sv1mHlJfc9D70nuX1_I";
+  const lvid = "d0b5ac8b05023e0cd278ec0c43a83ef2";
+
   const leetify_post_options = {
     method: "POST",
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
-      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+      lvid: lvid,
       "Content-Type": "application/json",
     },
   };
@@ -77,7 +58,7 @@
     headers: {
       Accept: "application/json, text/plain, */*",
       Authorization: `Bearer ${leetify_access_token}`,
-      lvid: "d0b5ac8b05023e0cd278ec0c43a83ef2",
+      lvid: lvid,
     },
   };
   const faceit_get_options = {
@@ -93,18 +74,25 @@
   const data = {
     leetify_rating: "NOT FOUND",
     hltv_rating: "NOT FOUND",
+    adr: "NOT FOUND",
     games: [],
     last_username: undefined,
     match_data: undefined,
     last_match_id: undefined,
     get_leetify_rating: async (username) => {
       if (username == data.last_username) {
-        return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+        return {
+          leetify: data.leetify_rating,
+          hltv: data.hltv_rating,
+          adr: data.adr,
+          games: data.games,
+        };
       } else {
         try {
           data.last_username = username;
           data.leetify_rating = "NOT FOUND";
           data.hltv_rating = "NOT FOUND";
+          data.adr = "NOT FOUND";
           data.games = [];
           let steam_64_id;
           let leetify_user_id;
@@ -146,6 +134,7 @@
                 ).toFixed(2);
                 data.hltv_rating = res_general_data_body.generalData.current.gamesTotals.hltvRating;
                 data.games = res_general_data_body.generalData.current.games;
+                data.adr = Math.round(res_general_data_body.generalData.current.gamesTotals.adr);
               }
 
               if (data.leetify_rating == 0 && data.hltv_rating == 0) {
@@ -155,13 +144,16 @@
                   leetify_get_options
                 );
 
-                if (res_general_data.ok) {
+                if (res_general_data_alt.ok) {
                   const res_general_data_alt_body = await res_general_data_alt.json();
                   data.leetify_rating = (
                     res_general_data_alt_body.generalData.current.gamesTotals.leetifyRating * 100
                   ).toFixed(2);
                   data.hltv_rating =
                     res_general_data_alt_body.generalData.current.gamesTotals.hltvRating;
+                  data.adr = Math.round(
+                    res_general_data_alt_body.generalData.current.gamesTotals.adr
+                  );
                 }
               }
             } else {
@@ -177,7 +169,12 @@
               }
             }
           }
-          return { leetify: data.leetify_rating, hltv: data.hltv_rating, games: data.games };
+          return {
+            leetify: data.leetify_rating,
+            hltv: data.hltv_rating,
+            adr: data.adr,
+            games: data.games,
+          };
         } catch (error) {
           console.error(error);
         }
@@ -254,6 +251,16 @@
     },
   };
 
+  function remove_my_elements() {
+    my_elements.forEach((element) => {
+      let parent = element.parentNode;
+      if (parent) {
+        parent.removeChild(element);
+      }
+    });
+    my_elements = [];
+  }
+
   function add_match_elements(match_data) {
     if (!match_data) {
       return;
@@ -301,16 +308,6 @@
     } catch (error) {
       console.error(error);
     }
-  }
-
-  function remove_my_elements() {
-    my_elements.forEach((element) => {
-      let parent = element.parentNode;
-      if (parent) {
-        parent.removeChild(element);
-      }
-    });
-    my_elements = [];
   }
 
   function add_match_history_ratings(e, ratings) {
@@ -376,14 +373,16 @@
     my_title.firstChild.firstChild.data = "RATINGS (LAST 30 MATCHES)";
 
     const my_tiles = tiles.cloneNode(true);
-    while (my_tiles.childElementCount > 2) {
+    while (my_tiles.childElementCount > 3) {
       my_tiles.removeChild(my_tiles.lastChild);
     }
     if (my_tiles.firstChild.firstChild.firstChild) {
-      my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
-      my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
-      my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
-      my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
+      my_tiles.children[0].firstChild.firstChild.firstChild.data = ratings.leetify;
+      my_tiles.children[0].lastChild.firstChild.firstChild.data = "LEETIFY RATING";
+      my_tiles.children[1].firstChild.firstChild.firstChild.data = ratings.hltv;
+      my_tiles.children[1].lastChild.firstChild.firstChild.data = "HLTV RATING";
+      my_tiles.children[2].firstChild.firstChild.firstChild.data = ratings.adr;
+      my_tiles.children[2].lastChild.firstChild.firstChild.data = "ADR";
 
       const my_divider = divider.cloneNode(true);
 

@@ -17,7 +17,7 @@ A small script that displays Leetify ratings on FACEIT
 ### How to install
 #### __Install the [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/faceit-leetify-rating/)__
 #### Or install the userscript by following the steps below
-1. Install Tampermonkey, Violentmonkey or FireMonkey
+1. Install __[Tampermonkey](https://www.tampermonkey.net/)__, [Violentmonkey](https://violentmonkey.github.io/get-it/) or any other userscript-manager of your choosing
 2. Click the install link below
 3. Click "Install" or "Confirm installation" or "OK"
 4. You're done!  

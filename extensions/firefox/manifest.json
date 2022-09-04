@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "FACEIT Leetify rating",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "homepage_url": "https://github.com/shakerrrr/faceit-leetify-rating",
 
     "description": "A small script that displays leetify ratings on FACEIT.",

@@ -337,10 +337,10 @@
       my_tiles.removeChild(my_tiles.lastChild);
     }
     if (my_tiles.firstChild.firstChild.firstChild) {
-      my_tiles.firstChild.firstChild.firstChild.firstChild.data = ratings.leetify;
-      my_tiles.firstChild.lastChild.firstChild.firstChild.data = "LEETIFY RATING";
-      my_tiles.lastChild.firstChild.firstChild.firstChild.data = ratings.hltv;
-      my_tiles.lastChild.lastChild.firstChild.firstChild.data = "HLTV RATING";
+      my_tiles.children[0].firstChild.firstChild.firstChild.data = ratings.leetify;
+      my_tiles.children[0].lastChild.firstChild.firstChild.data = "LEETIFY RATING";
+      my_tiles.children[1].firstChild.firstChild.firstChild.data = ratings.hltv;
+      my_tiles.children[1].lastChild.firstChild.firstChild.data = "HLTV RATING";
       my_tiles.children[2].firstChild.firstChild.firstChild.data = ratings.adr;
       my_tiles.children[2].lastChild.firstChild.firstChild.data = "ADR";
 

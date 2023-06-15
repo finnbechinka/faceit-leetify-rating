@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FACEIT leetify rating
 // @namespace    https://www.faceit.com/
-// @version      1.6.0
+// @version      1.6.2
 // @description  A small script that displays leetify ratings on FACEIT
 // @author       shaker
 // @match        *://*.faceit.com/*
@@ -107,10 +107,10 @@
 
           if (steam_64_id) {
             let options = leetify_post_options;
-            options.body = `{"searchTerm":"${steam_64_id}"}`;
+            options.body = `{"query":"${steam_64_id}"}`;
 
             const res_search = await fetch(
-              "https://api.leetify.com/api/user/search",
+              "https://api.leetify.com/api/search/users",
               leetify_post_options
             );
 
@@ -207,9 +207,9 @@
               let leetify_id;
 
               let options = leetify_post_options;
-              options.body = `{"searchTerm":"${id}"}`;
+              options.body = `{"query":"${id}"}`;
 
-              const res_search = await fetch("https://api.leetify.com/api/user/search", options);
+              const res_search = await fetch("https://api.leetify.com/api/search/users", options);
 
               if (res_search.ok) {
                 const res_search_body = await res_search.json();
@@ -269,41 +269,37 @@
       if (my_elements.length != 0) {
         remove_my_elements();
       }
-      // find the shadow root(s) (very cringe)
-      const shadows = Array.from(document.querySelectorAll("*"))
-        .map((el) => el.shadowRoot)
-        .filter(Boolean);
-      shadows.forEach((s) => {
-        let elements = s.querySelectorAll("span");
-        elements.forEach((e) => {
-          if (e.lastChild && e.lastChild.data == "Kills") {
-            const td = e.parentNode;
-            const my_td = td.cloneNode(true);
-            my_td.lastChild.lastChild.data = "Leetify";
-            td.parentNode.insertBefore(my_td, td);
-            my_elements.push(my_td);
+      let elements = document.querySelectorAll("span");
+      elements.forEach((e) => {
+        if (e.lastChild && e.lastChild.data == "Kills") {
+          const td = e.parentNode;
+          const my_td = td.cloneNode(true);
+          my_td.lastChild.lastChild.data = "Leetify";
+          td.parentNode.insertBefore(my_td, td);
+          my_elements.push(my_td);
 
-            const players = td.parentNode.parentNode.nextSibling;
-            for (let player of players.childNodes) {
-              const name = player.firstChild.firstChild.firstChild.lastChild.lastChild.data;
-              const my_td2 = player.firstChild.nextSibling.cloneNode(true);
-              for (let stats of match_data.playerStats) {
-                if (stats.name == name) {
-                  const leetify_rating = (stats.leetifyRating * 100).toFixed(2);
-                  my_td2.lastChild.lastChild.data = leetify_rating;
-                  if (leetify_rating > 2) {
-                    my_td2.lastChild.style.color = "#32d35a";
-                  }
-                  if (leetify_rating < -2) {
-                    my_td2.lastChild.style.color = "#ff002b";
-                  }
+          const players = td.parentNode.parentNode.nextSibling;
+          for (let player of players.childNodes) {
+            const name = player.firstChild.firstChild.firstChild.lastChild.lastChild.innerText;
+            const my_td2 = player.firstChild.nextSibling.cloneNode(true);
+            for (let stats of match_data.playerStats) {
+              if (stats.name == name) {
+                const leetify_rating = (stats.leetifyRating * 100).toFixed(2);
+                const match_link = `https://leetify.com/app/match-details/${match_data.id}`;
+                my_td2.lastChild.innerHTML = `<a href="${match_link}" target="_blank">${leetify_rating}</a>`;
+                my_td2.lastChild.lastChild.style.color = "#FFFFFF";
+                if (leetify_rating > 2) {
+                  my_td2.lastChild.lastChild.style.color = "#32d35a";
+                }
+                if (leetify_rating < -2) {
+                  my_td2.lastChild.lastChild.style.color = "#ff002b";
                 }
               }
-              player.insertBefore(my_td2, player.firstChild.nextSibling);
-              my_elements.push(my_td2);
             }
+            player.insertBefore(my_td2, player.firstChild.nextSibling);
+            my_elements.push(my_td2);
           }
-        });
+        }
       });
     } catch (error) {
       console.error(error);
@@ -404,21 +400,15 @@
       if (my_elements.length != 0) {
         remove_my_elements();
       }
-      // find the shadow root(s) (very cringe)
-      const shadows = Array.from(document.querySelectorAll("*"))
-        .map((el) => el.shadowRoot)
-        .filter(Boolean);
-      shadows.forEach((s) => {
-        let elements = s.querySelectorAll("span");
-        elements.forEach((e) => {
-          if (e.lastChild && e.lastChild.data == "Main Statistics") {
-            add_profile_ratings(e, ratings);
-          }
+      let elements = document.querySelectorAll("span");
+      elements.forEach((e) => {
+        if (e.lastChild && e.lastChild.data == "Main Statistics") {
+          add_profile_ratings(e, ratings);
+        }
 
-          if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
-            add_match_history_ratings(e, ratings);
-          }
-        });
+        if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
+          add_match_history_ratings(e, ratings);
+        }
       });
     } catch (error) {
       console.error(error);

@@ -107,10 +107,10 @@
 
           if (steam_64_id) {
             let options = leetify_post_options;
-            options.body = `{"searchTerm":"${steam_64_id}"}`;
+            options.body = `{"query":"${steam_64_id}"}`;
 
             const res_search = await fetch(
-              "https://api.leetify.com/api/user/search",
+              "https://api.leetify.com/api/search/users",
               leetify_post_options
             );
 
@@ -404,21 +404,15 @@
       if (my_elements.length != 0) {
         remove_my_elements();
       }
-      // find the shadow root(s) (very cringe)
-      const shadows = Array.from(document.querySelectorAll("*"))
-        .map((el) => el.shadowRoot)
-        .filter(Boolean);
-      shadows.forEach((s) => {
-        let elements = s.querySelectorAll("span");
-        elements.forEach((e) => {
-          if (e.lastChild && e.lastChild.data == "Main Statistics") {
-            add_profile_ratings(e, ratings);
-          }
+      let elements = document.querySelectorAll("span");
+      elements.forEach((e) => {
+        if (e.lastChild && e.lastChild.data == "Main Statistics") {
+          add_profile_ratings(e, ratings);
+        }
 
-          if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
-            add_match_history_ratings(e, ratings);
-          }
-        });
+        if (e.lastChild && e.lastChild.data == "Match History" && ratings.games.length == 30) {
+          add_match_history_ratings(e, ratings);
+        }
       });
     } catch (error) {
       console.error(error);

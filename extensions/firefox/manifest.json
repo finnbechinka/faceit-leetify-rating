@@ -1,31 +1,23 @@
 {
-    "manifest_version": 2,
-    "name": "FACEIT Leetify rating",
-    "version": "1.6.1",
-    "homepage_url": "https://github.com/shakerrrr/faceit-leetify-rating",
+  "manifest_version": 2,
+  "name": "FACEIT Leetify rating",
+  "version": "1.6.2",
+  "homepage_url": "https://github.com/shakerrrr/faceit-leetify-rating",
 
-    "description": "A small script that displays leetify ratings on FACEIT.",
+  "description": "A small script that displays leetify ratings on FACEIT.",
 
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*.faceit.com/*"
-            ],
-            "js": [
-                "faceit-leetify-rating.js"
-            ]
-        }
-    ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.faceit.com/*"],
+      "js": ["faceit-leetify-rating.js"]
+    }
+  ],
 
-    "permissions": [
-        "*://*.faceit.com/*",
-        "*://*.leetify.com/*",
-        "webRequest"
-    ],
+  "permissions": ["*://*.faceit.com/*", "*://*.leetify.com/*", "webRequest"],
 
-    "icons": {
-        "32": "icons/icon_32.png"
-    },
+  "icons": {
+    "32": "icons/icon_32.png"
+  },
 
-    "author": "shaker"
+  "author": "shaker"
 }

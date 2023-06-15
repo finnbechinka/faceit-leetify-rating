@@ -323,12 +323,14 @@
             for (let stats of match_data.playerStats) {
               if (stats.name == name) {
                 const leetify_rating = (stats.leetifyRating * 100).toFixed(2);
-                my_td2.lastChild.data = leetify_rating;
+                const match_link = `https://leetify.com/app/match-details/${match_data.id}`;
+                my_td2.lastChild.innerHTML = `<a href="${match_link}" target="_blank">${leetify_rating}</a>`;
+                my_td2.lastChild.lastChild.style.color = "#FFFFFF";
                 if (leetify_rating > 2) {
-                  my_td2.lastChild.style.color = "#32d35a";
+                  my_td2.lastChild.lastChild.style.color = "#32d35a";
                 }
                 if (leetify_rating < -2) {
-                  my_td2.lastChild.style.color = "#ff002b";
+                  my_td2.lastChild.lastChild.style.color = "#ff002b";
                 }
               }
             }

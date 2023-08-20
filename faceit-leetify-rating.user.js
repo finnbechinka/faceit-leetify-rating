@@ -280,7 +280,7 @@
 
           const players = td.parentNode.parentNode.nextSibling;
           for (let player of players.childNodes) {
-            const name = player.firstChild.firstChild.firstChild.lastChild.lastChild.innerText;
+            const name = player.firstChild.firstChild.firstChild.lastChild.firstChild.innerText;
             const my_td2 = player.firstChild.nextSibling.cloneNode(true);
             for (let stats of match_data.playerStats) {
               if (stats.name == name) {

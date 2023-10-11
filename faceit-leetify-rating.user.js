@@ -72,6 +72,7 @@
   let old_url;
 
   const data = {
+    game_version: undefined,
     leetify_rating: "LOADING",
     hltv_rating: "LOADING",
     adr: "LOADING",
@@ -132,7 +133,8 @@
       if (!res_player.ok) return this.not_found_obj;
 
       const res_player_body = await res_player.json();
-      steam_64_id = res_player_body.games.csgo.game_player_id;
+      if (this.game_version == "cs2") steam_64_id = res_player_body.games.cs2.game_player_id;
+      if (this.game_version == "csgo") steam_64_id = res_player_body.games.csgo.game_player_id;
 
       if (!steam_64_id) return this.not_found_obj;
 
@@ -154,7 +156,7 @@
       if (!leetify_user_id) return await this.get_leetify_rating_fallback(steam_64_id);
 
       const res_general_data = await fetch(
-        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&spectatingId=${leetify_user_id}`,
+        `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&dataSources=faceit&gameVersions=${this.game_version}&spectatingId=${leetify_user_id}`,
         leetify_get_options
       );
 
@@ -171,7 +173,7 @@
       if (data.leetify_rating == 0 && data.hltv_rating == 0) {
         this.games = [];
         const res_general_data_alt = await fetch(
-          `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&spectatingId=${leetify_user_id}`,
+          `https://api.leetify.com/api/general-data?side=null&roundEconomyType=null&gameVersions=${this.game_version}&spectatingId=${leetify_user_id}`,
           leetify_get_options
         );
 
@@ -223,8 +225,8 @@
 
         const res_search_body = await res_search.json();
 
-        if (!res_search.ok) return undefined;
-        if (res_search_body.length <= 0) return undefined;
+        if (!res_search.ok) continue;
+        if (res_search_body.length <= 0) continue;
 
         const leetify_id = res_search_body[0].userId;
         const res_history = await fetch(
@@ -232,11 +234,11 @@
           leetify_get_options
         );
 
-        if (!res_history.ok) return undefined;
+        if (!res_history.ok) continue;
 
         const res_history_body = await res_history.json();
 
-        if (res_history_body.games.length <= 0) return undefined;
+        if (res_history_body.games.length <= 0) continue;
 
         for (let game of res_history_body.games) {
           if (game.faceitMatchId == match_id) {
@@ -413,20 +415,24 @@
       const url_segments = url.split("/");
       let index;
 
-      const is_csgo_stats_page =
+      const is_stats_page =
         (url_segments.includes("players") || url_segments.includes("players-modal")) &&
-        url_segments.includes("stats") &&
-        url_segments.includes("csgo");
+        url_segments.includes("stats");
 
       const is_match_scoreboard_page =
-        url_segments.includes("csgo") &&
-        url_segments.includes("room") &&
-        url_segments.includes("scoreboard");
+        url_segments.includes("room") && url_segments.includes("scoreboard");
 
-      if (is_csgo_stats_page) {
-        index = url_segments.indexOf("players") + 1;
-        if (index == -1) index = url_segments.indexOf("players-modal") + 1;
-        const username = url_segments[index];
+      const is_csgo = url_segments.includes("csgo");
+      const is_cs2 = url_segments.includes("cs2");
+
+      if (is_csgo) {
+        data.game_version = "csgo";
+      } else if (is_cs2) {
+        data.game_version = "cs2";
+      }
+
+      if (is_stats_page) {
+        const username = url_segments[5];
         const ratings = await data.get_leetify_rating(username);
         add_elements(ratings);
       }

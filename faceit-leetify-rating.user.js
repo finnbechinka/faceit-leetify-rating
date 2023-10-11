@@ -226,7 +226,7 @@
         if (!res_search.ok) return undefined;
         if (res_search_body.length <= 0) return undefined;
 
-        leetify_id = res_search_body[0].userId;
+        const leetify_id = res_search_body[0].userId;
         const res_history = await fetch(
           `https://api.leetify.com/api/games/history?dataSources=faceit&periods=%7B%22currentPeriod%22%3A%7B%22startDate%22%3A%2201.01.2015%22,%22endDate%22%3A%2201.01.3000%22%7D,%22previousPeriod%22%3A%7B%22startDate%22%3A%2201.10.2014%22,%22endDate%22%3A%2224.12.2014%22%7D%7D&spectatingId=${leetify_id}`,
           leetify_get_options
@@ -290,17 +290,17 @@
       for (let player of players.childNodes) {
         for (let stats of match_data.playerStats) {
           const name = player.firstChild.firstChild.firstChild.lastChild.firstChild.innerText;
-          const my_td2 = player.firstChild.nextSibling.cloneNode(true);
           if (stats.name == name) {
+            const my_td2 = player.firstChild.nextSibling.cloneNode(true);
             const leetify_rating = (stats.leetifyRating * 100).toFixed(2);
             const match_link = `https://leetify.com/app/match-details/${match_data.id}`;
             my_td2.lastChild.innerHTML = `<a href="${match_link}" target="_blank">${leetify_rating}</a>`;
             my_td2.lastChild.lastChild.style.color = "#FFFFFF";
             if (leetify_rating > 2) my_td2.lastChild.lastChild.style.color = "#32d35a";
             if (leetify_rating < -2) my_td2.lastChild.lastChild.style.color = "#ff002b";
+            player.insertBefore(my_td2, player.firstChild.nextSibling);
+            my_elements.push(my_td2);
           }
-          player.insertBefore(my_td2, player.firstChild.nextSibling);
-          my_elements.push(my_td2);
         }
       }
     });
